@@ -27,31 +27,8 @@ sudo git clone https://github.com/brian7704/OpenTAKServer.git /opt/OpenTAKServer
 sudo chown "$USERNAME":"$USERNAME" /opt/OpenTAKServer -R
 poetry config virtualenvs.in-project true
 cd /opt/OpenTAKServer && poetry update && poetry install
-cd opentakserver && cp secret_key.example.py secret_key.py
 
 cd "$INSTALLER_DIR" || exit
-
-echo "${GREEN}Installing mediamtx...${NC}"
-sudo mkdir -p /usr/local/bin/
-sudo mkdir -p /usr/local/etc/
-
-sudo cp mediamtx/linux_amd64/mediamtx /usr/local/bin/
-sudo chmod a+x /usr/local/bin/mediamtx
-sudo cp mediamtx/mediamtx.yml /usr/local/etc/
-sudo chmod a+rw /usr/local/etc/mediamtx.yml
-
-sudo tee /etc/systemd/system/mediamtx.service >/dev/null << EOF
-[Unit]
-Wants=network.target
-[Service]
-ExecStart=/usr/local/bin/mediamtx /usr/local/etc/mediamtx.yml
-[Install]
-WantedBy=multi-user.target
-EOF
-
-sudo systemctl daemon-reload
-sudo systemctl enable mediamtx
-sudo systemctl start mediamtx
 
 IP_ADDRESSES=()
 
@@ -90,6 +67,31 @@ while [ "$SERVER_ADDRESS" == "" ]; do
   done
 done
 
+echo "${GREEN}Installing mediamtx...${NC}"
+sudo mkdir -p /usr/local/bin/
+sudo mkdir -p /usr/local/etc/
+
+sudo cp mediamtx/linux_amd64/mediamtx /usr/local/bin/
+sudo chmod a+x /usr/local/bin/mediamtx
+sudo cp mediamtx/mediamtx.yml /usr/local/etc/
+sudo chmod a+rw /usr/local/etc/mediamtx.yml
+
+sudo tee /etc/systemd/system/mediamtx.service >/dev/null << EOF
+[Unit]
+Wants=network.target
+[Service]
+ExecStart=/usr/local/bin/mediamtx /usr/local/etc/mediamtx.yml
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo sed -i "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/${SERVER_ADDRESS}/${SERVER_ADDRESS}.pem~g" /usr/local/etc/mediamtx.yml
+sudo sed -i "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/${SERVER_ADDRESS}/${SERVER_ADDRESS}.nopass.key~g" /usr/local/etc/mediamtx.yml
+
+sudo systemctl daemon-reload
+sudo systemctl enable mediamtx
+sudo systemctl start mediamtx
+
 echo "${GREEN}Creating certificate authority...${NC}}"
 
 mkdir -p ~/ots/ca
@@ -116,13 +118,20 @@ sudo tee /etc/systemd/system/opentakserver.service >/dev/null << EOF
 [Unit]
 Wants=network.target
 [Service]
-ExecStart=cd /opt/OpenTAKServer && poetry run python opentakserver/app.py
+User=$(whoami)
+WorkingDirectory=/opt/OpenTAKServer
+ExecStart=/usr/local/bin/poetry run python /opt/OpenTAKServer/opentakserver/app.py
 [Install]
 WantedBy=multi-user.target
 EOF
+
+echo "secret_key = '$(python3 -c 'import secrets; print(secrets.token_hex())')'" > /opt/OpenTAKServer/opentakserver/secret_key.py
+echo "node_id = '$(python3 -c "import random; import string; print(''.join(random.choices(string.ascii_lowercase + string.digits, k=64)))")'" >> /opt/OpenTAKServer/opentakserver/secret_key.py
+echo "security_password_salt = '$(python3 -c "import secrets; print(secrets.SystemRandom().getrandbits(128))")'" >> /opt/OpenTAKServer/opentakserver/secret_key.py
+echo "server_address = '$SERVER_ADDRESS'" >> /opt/OpenTAKServer/opentakserver/secret_key.py
 
 sudo systemctl daemon-reload
 sudo systemctl enable opentakserver
 sudo systemctl start opentakserver
 
-echo "${GREEN}Setup is complete. You can start OpenTAKServer by running this command 'cd /opt/OpenTAKServer && poetry run python opentakserver/app.py${NC}"
+echo "${GREEN}Setup is complete and OpenTAKServer is running. ${NC}"

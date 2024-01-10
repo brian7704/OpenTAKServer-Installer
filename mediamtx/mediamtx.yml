@@ -39,7 +39,7 @@ udpMaxPayloadSize: 1472
 # }
 # If the response code is 20x, authentication is accepted, otherwise
 # it is discarded.
-externalAuthenticationURL:
+externalAuthenticationURL: http://127.0.0.1:8081/api/external_auth
 
 # Enable the HTTP API.
 api: yes
@@ -102,9 +102,9 @@ multicastRTCPPort: 8003
 # This can be generated with:
 # openssl genrsa -out server.key 2048
 # openssl req -new -x509 -sha256 -key server.key -out server.crt -days 3650
-serverKey: server.key
+serverKey: SERVER_KEY_FILE
 # Path to the server certificate. This is needed only when encryption is "strict" or "optional".
-serverCert: server.crt
+serverCert: SERVER_CERT_FILE
 # Authentication methods. Available are "basic" and "digest".
 # "digest" doesn't provide any additional security and is available for compatibility reasons only.
 authMethods: [basic]
@@ -118,16 +118,16 @@ rtmp: yes
 rtmpAddress: :1935
 # Encrypt connections with TLS (RTMPS).
 # Available values are "no", "strict", "optional".
-rtmpEncryption: "no"
+rtmpEncryption: "optional"
 # Address of the RTMPS listener. This is needed only when encryption is "strict" or "optional".
 rtmpsAddress: :1936
 # Path to the server key. This is needed only when encryption is "strict" or "optional".
 # This can be generated with:
 # openssl genrsa -out server.key 2048
 # openssl req -new -x509 -sha256 -key server.key -out server.crt -days 3650
-rtmpServerKey: server.key
+rtmpServerKey: SERVER_KEY_FILE
 # Path to the server certificate. This is needed only when encryption is "strict" or "optional".
-rtmpServerCert: server.crt
+rtmpServerCert: SERVER_CERT_FILE
 
 ###############################################
 # Global settings -> HLS server
@@ -138,14 +138,14 @@ hls: yes
 hlsAddress: :8888
 # Enable TLS/HTTPS on the HLS server.
 # This is required for Low-Latency HLS.
-hlsEncryption: no
+hlsEncryption: yes
 # Path to the server key. This is needed only when encryption is yes.
 # This can be generated with:
 # openssl genrsa -out server.key 2048
 # openssl req -new -x509 -sha256 -key server.key -out server.crt -days 3650
-hlsServerKey: server.key
+hlsServerKey: SERVER_KEY_FILE
 # Path to the server certificate.
-hlsServerCert: server.crt
+hlsServerCert: SERVER_CERT_FILE
 # By default, HLS is generated only when requested by a user.
 # This option allows to generate it always, avoiding the delay between request and generation.
 hlsAlwaysRemux: no
@@ -198,9 +198,9 @@ webrtcEncryption: yes
 # This can be generated with:
 # openssl genrsa -out server.key 2048
 # openssl req -new -x509 -sha256 -key server.key -out server.crt -days 3650
-webrtcServerKey: server.key
+webrtcServerKey: SERVER_KEY_FILE
 # Path to the server certificate.
-webrtcServerCert: server.crt
+webrtcServerCert: SERVER_CERT_FILE
 # Value of the Access-Control-Allow-Origin header provided in every HTTP response.
 # This allows to play the WebRTC stream from an external website.
 webrtcAllowOrigin: '*'
