@@ -1,0 +1,106 @@
+server {
+        listen 8080 default_server;
+        listen [::]:8080 default_server;
+
+        root /var/www/html;
+
+        index index.html index.htm index.nginx-debian.html;
+
+        server_name opentakserver_8080;
+
+        location / {
+                 proxy_pass http://127.0.0.1:8081;
+                 proxy_http_version 1.1;
+                 proxy_set_header Host $host;
+                 proxy_set_header X-Forwarded-For $remote_addr;
+        }
+
+        location /socket.io {
+                include proxy_params;
+                proxy_http_version 1.1;
+                proxy_buffering off;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection "Upgrade";
+                proxy_set_header Host $host;
+                proxy_set_header X-Forwarded-For $remote_addr;
+                proxy_pass http://127.0.0.1:8081/socket.io;
+        }
+
+        try_files $uri /index.html;
+        client_max_body_size 100M;
+}
+
+server {
+
+        root /var/www/html;
+        index index.html index.htm index.nginx-debian.html;
+        server_name opentakserver_8443;
+
+        location /Marti/api/tls {
+                return 404;
+        }
+
+        location /Marti {
+                if ($ssl_client_verify != SUCCESS) {
+                        return 400;
+                        break;
+                }
+                proxy_pass http://127.0.0.1:8081;
+                proxy_http_version 1.1;
+                proxy_set_header Host $host;
+                proxy_set_header X-Forwarded-For $remote_addr;
+        }
+
+
+        location / {
+                proxy_pass http://127.0.0.1:8081;
+                proxy_http_version 1.1;
+                proxy_set_header Host $host;
+                proxy_set_header X-Forwarded-For $remote_addr;
+        }
+
+        location /socket.io {
+                include proxy_params;
+                proxy_http_version 1.1;
+                proxy_buffering off;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection "Upgrade";
+                proxy_set_header Host $host;
+                proxy_set_header X-Forwarded-For $remote_addr;
+                proxy_pass http://127.0.0.1:8081/socket.io;
+        }
+
+        try_files $uri /index.html;
+        client_max_body_size 100M;
+
+
+    # listen [::]:8443 ssl ipv6only=on;
+    listen 8443 ssl;
+    ssl_certificate SERVER_CERT_FILE;
+    ssl_certificate_key SERVER_KEY_FILE;
+    ssl_verify_client optional;
+    ssl_client_certificate CA_CERT_FILE;
+}
+
+
+server {
+
+    root /var/www/html;
+    index index.html index.htm index.nginx-debian.html;
+
+    server_name opentakserver_8446;
+
+    location /Marti/api/tls {
+        proxy_pass http://127.0.0.1:8081;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $remote_addr;
+    }
+
+    # listen [::]:8446 ssl ipv6only=on;
+    listen 8446 ssl;
+    ssl_certificate SERVER_CERT_FILE;
+    ssl_certificate_key SERVER_KEY_FILE;
+    ssl_verify_client optional;
+    ssl_client_certificate CA_CERT_FILE;
+}
