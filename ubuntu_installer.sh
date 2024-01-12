@@ -68,25 +68,27 @@ while [ "$SERVER_ADDRESS" == "" ]; do
 done
 
 echo "${GREEN}Installing mediamtx...${NC}"
-sudo mkdir -p /usr/local/bin/
-sudo mkdir -p /usr/local/etc/
+mkdir -p ~/ots/mediamtx/recordings
 
-sudo cp mediamtx/linux_amd64/mediamtx /usr/local/bin/
-sudo chmod a+x /usr/local/bin/mediamtx
-sudo cp mediamtx/mediamtx.yml /usr/local/etc/
-sudo chmod a+rw /usr/local/etc/mediamtx.yml
+MTX_TOKEN=$(python3 -c "import secrets; print(secrets.SystemRandom().getrandbits(128))")
+
+cp mediamtx/linux_amd64/mediamtx ~/ots/mediamtx
+chmod +x ~/ots/mediamtx/mediamtx
+cp mediamtx/mediamtx.yml ~/ots/mediamtx
+
+sudo sed -i "s/MTX_TOKEN/${MTX_TOKEN}/g" ~/ots/mediamtx/mediamtx.yml
 
 sudo tee /etc/systemd/system/mediamtx.service >/dev/null << EOF
 [Unit]
 Wants=network.target
 [Service]
-ExecStart=/usr/local/bin/mediamtx /usr/local/etc/mediamtx.yml
+ExecStart=$HOME/ots/mediamtx/mediamtx $HOME/ots/mediamtx/mediamtx.yml
 [Install]
 WantedBy=multi-user.target
 EOF
 
-sudo sed -i "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/${SERVER_ADDRESS}/${SERVER_ADDRESS}.pem~g" /usr/local/etc/mediamtx.yml
-sudo sed -i "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/${SERVER_ADDRESS}/${SERVER_ADDRESS}.nopass.key~g" /usr/local/etc/mediamtx.yml
+sudo sed -i "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/${SERVER_ADDRESS}/${SERVER_ADDRESS}.pem~g" ~/ots/mediamtx/mediamtx.yml
+sudo sed -i "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/${SERVER_ADDRESS}/${SERVER_ADDRESS}.nopass.key~g" ~ots/mediamtx/mediamtx.yml
 
 sudo systemctl daemon-reload
 sudo systemctl enable mediamtx
@@ -128,7 +130,8 @@ EOF
 echo "secret_key = '$(python3 -c 'import secrets; print(secrets.token_hex())')'" > /opt/OpenTAKServer/opentakserver/secret_key.py
 echo "node_id = '$(python3 -c "import random; import string; print(''.join(random.choices(string.ascii_lowercase + string.digits, k=64)))")'" >> /opt/OpenTAKServer/opentakserver/secret_key.py
 echo "security_password_salt = '$(python3 -c "import secrets; print(secrets.SystemRandom().getrandbits(128))")'" >> /opt/OpenTAKServer/opentakserver/secret_key.py
-echo "server_address = '$SERVER_ADDRESS'" >> /opt/OpenTAKServer/opentakserver/secret_key.py
+echo "mediamtx_token = '${MTX_TOKEN}'" >> /opt/OpenTAKServer/opentakserver/secret_key.py
+echo "server_address = '${SERVER_ADDRESS}'" >> /opt/OpenTAKServer/opentakserver/secret_key.py
 
 sudo systemctl daemon-reload
 sudo systemctl enable opentakserver

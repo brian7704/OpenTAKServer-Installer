@@ -62,12 +62,12 @@ pprofAddress: 127.0.0.1:9999
 # * RTSP_PORT: RTSP server port
 # * MTX_CONN_TYPE: connection type
 # * MTX_CONN_ID: connection ID
-runOnConnect:
+runOnConnect: curl http://localhost:8081/api/mediamtx/webhook?connection_type=$MTX_CONN_TYPE&connection_id=$MTX_CONN_ID&rtsp_port=$RTSP_PORT&event=connect&token=MTX_TOKEN
 # Restart the command if it exits.
 runOnConnectRestart: no
 # Command to run when a client disconnects from the server.
 # Environment variables are the same of runOnConnect.
-runOnDisconnect:
+runOnDisconnect: curl http://localhost:8081/api/mediamtx/webhook?connection_type=$MTX_CONN_TYPE&connection_id=$MTX_CONN_ID&rtsp_port=$RTSP_PORT&event=disconnect&token=MTX_TOKEN
 
 ###############################################
 # Global settings -> RTSP server
@@ -299,7 +299,7 @@ pathDefaults:
   # Path of recording segments.
   # Extension is added automatically.
   # Available variables are %path (path name), %Y %m %d %H %M %S %f %s (time in strftime format)
-  recordPath: ./recordings/%path/%Y-%m-%d_%H-%M-%S-%f
+  recordPath: OTS_FOLDER/mediamtx/recordings/%path/%Y-%m-%d_%H-%M-%S-%f
   # Format of recorded segments.
   # Available formats are "fmp4" (fragmented MP4) and "mpegts" (MPEG-TS).
   recordFormat: fmp4
@@ -500,12 +500,12 @@ pathDefaults:
   #   a regular expression.
   # * MTX_SOURCE_TYPE: source type
   # * MTX_SOURCE_ID: source ID
-  runOnReady:
+  runOnReady: curl http://localhost:8081/api/mediamtx/webhook?rtsp_port=$RTSP_PORT&path=$MTX_PATH&query=$MTX_QUERY&source_type=$MTX_SOURCE_TYPE&source_id=$MTX_SOURCE_ID&event=ready&token=MTX_TOKEN
   # Restart the command if it exits.
   runOnReadyRestart: no
   # Command to run when the stream is not available anymore.
   # Environment variables are the same of runOnReady.
-  runOnNotReady:
+  runOnNotReady: curl http://localhost:8081/api/mediamtx/webhook?rtsp_port=$RTSP_PORT&path=$MTX_PATH&query=$MTX_QUERY&source_type=$MTX_SOURCE_TYPE&source_id=$MTX_SOURCE_ID&event=notready&token=MTX_TOKEN
 
   # Command to run when a client starts reading.
   # This is terminated with SIGINT when a client stops reading.
@@ -517,12 +517,12 @@ pathDefaults:
   #   a regular expression.
   # * MTX_READER_TYPE: reader type
   # * MTX_READER_ID: reader ID
-  runOnRead:
+  runOnRead: curl http://localhost:8081/api/mediamtx/webhook?rtsp_port=$RTSP_PORT&path=$MTX_PATH&query=$MTX_QUERY&reader_type=$MTX_READER_TYPE&reader_id=$MTX_READER_ID&event=read&token=MTX_TOKEN
   # Restart the command if it exits.
   runOnReadRestart: no
   # Command to run when a client stops reading.
   # Environment variables are the same of runOnRead.
-  runOnUnread:
+  runOnUnread: curl http://localhost:8081/api/mediamtx/webhook?rtsp_port=$RTSP_PORT&path=$MTX_PATH&query=$MTX_QUERY&reader_type=$MTX_READER_TYPE&reader_id=$MTX_READER_ID&event=unread&token=MTX_TOKEN
 
   # Command to run when a recording segment is created.
   # The following environment variables are available:
@@ -552,6 +552,8 @@ pathDefaults:
 # for example "~^(test1|test2)$" will match both "test1" and "test2",
 # for example "~^prefix" will match all paths that start with "prefix".
 paths:
+  startup:
+    runOnInit: curl http://localhost:8081/api/mediamtx/webhook?path=$MTX_PATH&rtsp_port=$RTSP_PORT&event=init&token=MTX_TOKEN
   # example:
   # my_camera:
   #   source: rtsp://my_camera
