@@ -67,6 +67,16 @@ while [ "$SERVER_ADDRESS" == "" ]; do
   done
 done
 
+echo "${GREEN}Creating certificate authority...${NC}}"
+
+mkdir -p ~/ots/ca
+cp "$INSTALLER_DIR"/config.cfg ~/ots/ca/ca_config.cfg
+
+bash ./makeRootCa.sh --ca-name OpenTAKServer-CA
+bash ./makeCert.sh server "$SERVER_ADDRESS"
+
+cd "$INSTALLER_DIR" || exit
+
 echo "${GREEN}Installing mediamtx...${NC}"
 mkdir -p ~/ots/mediamtx/recordings
 
@@ -89,19 +99,11 @@ EOF
 
 sudo sed -i "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/${SERVER_ADDRESS}/${SERVER_ADDRESS}.pem~g" ~/ots/mediamtx/mediamtx.yml
 sudo sed -i "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/${SERVER_ADDRESS}/${SERVER_ADDRESS}.nopass.key~g" ~ots/mediamtx/mediamtx.yml
+sudo sed -i "s~OTS_FOLDER~${HOME}/ots~g" ~ots/mediamtx/mediamtx.yml
 
 sudo systemctl daemon-reload
 sudo systemctl enable mediamtx
 sudo systemctl start mediamtx
-
-echo "${GREEN}Creating certificate authority...${NC}}"
-
-mkdir -p ~/ots/ca
-
-bash ./makeRootCa.sh --ca-name OpenTAKServer-CA
-bash ./makeCert.sh server "$SERVER_ADDRESS"
-
-cd "$INSTALLER_DIR" || exit
 
 echo "${GREEN}Setting up nginx...${NC}"
 sudo rm -f /etc/nginx/sites-enabled/*
@@ -135,6 +137,6 @@ echo "server_address = '${SERVER_ADDRESS}'" >> /opt/OpenTAKServer/opentakserver/
 
 sudo systemctl daemon-reload
 sudo systemctl enable opentakserver
-sudo systemctl start opentakserver
+systemctl start opentakserver
 
 echo "${GREEN}Setup is complete and OpenTAKServer is running. ${NC}"
