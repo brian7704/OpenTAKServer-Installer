@@ -17,6 +17,9 @@ then
   exit 1
 fi
 
+mkdir -p ~/ots
+cp iconsets.sqlite ~/ots/ots.db
+
 echo "${GREEN}Installing packages via apt. You may be prompted for your sudo password...${NC}"
 
 
