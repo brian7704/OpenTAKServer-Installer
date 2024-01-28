@@ -3,6 +3,8 @@
 . /etc/os-release
 . colors.sh
 
+IP_REGEX="^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$"
+
 if [ "$NAME" != "Ubuntu" ]
 then
   read -p "${YELLOW} This installer is for Ubuntu but this system is $NAME. Do you want to run anyway? [y/N] ${NC}" confirm && [[ $confirm == [yY] || $confirm == [yY][eE][sS] ]] || exit 1
@@ -56,9 +58,8 @@ while [ "$SERVER_ADDRESS" == "" ]; do
         read -p "Please enter the domain or IP: " SERVER_ADDRESS
         break
         ;;
-      "^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$")
+      $IP_REGEX)
         SERVER_ADDRESS=$ip
-        echo "got regex shit"
         break
         ;;
       *)
@@ -69,6 +70,41 @@ while [ "$SERVER_ADDRESS" == "" ]; do
     break
   done
 done
+
+LETS_ENCRYPT=""
+
+if ! [[ $SERVER_ADDRESS =~ $IP_REGEX ]]
+then
+  PS3="${GREEN}Looks like you're using a domain for your server address. Would you like to get a free SSL certificate from Let's Encrypt?{$NC} [y/N]"
+  while [ "$LETS_ENCRYPT" == "" ]; do
+    select confirm in Y N; do
+      case $confirm in
+          "^[yY]$")
+            LETS_ENCRYPT=1
+            break
+            ;;
+          *)
+            LETS_ENCRYPT=0
+            break
+            ;;
+          esac
+    done
+  done
+fi
+
+if [ "$LETS_ENCRYPT" == 1 ];
+then
+  read -p "${YELLOW}Attempting to get a Let's Encrypt certificate for {$SERVER_ADDRESS}. Please make sure that ports 80 and 443 are forwarded from your firewall to this server. See https://certbot.eff.org/ for more details. Press enter to continue.${NC}"
+  sudo apt install certbot -y
+  CERTBOT_EXIT_CODE=$(sudo certbot certonly --nginx -d "$SERVER_ADDRESS")
+  if [ "$CERTBOT_EXIT_CODE" == 0 ];
+  then
+    read -p "${GREEN}Successfully obtained a certificate for ${SERVER_ADDRESS}. Press enter to continue.${NC}"
+  else
+    read -p "${RED}Failed to get a Let's Encrypt certificate. The installer will proceed with a self signed certificate. Press enter to continue."
+    LETS_ENCRYPT=0
+  fi
+fi
 
 ENABLE_EMAIL=""
 
@@ -139,9 +175,16 @@ ExecStart=$HOME/ots/mediamtx/mediamtx $HOME/ots/mediamtx/mediamtx.yml
 WantedBy=multi-user.target
 EOF
 
-sudo sed -i "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/${SERVER_ADDRESS}/${SERVER_ADDRESS}.pem~g" ~/ots/mediamtx/mediamtx.yml
-sudo sed -i "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/${SERVER_ADDRESS}/${SERVER_ADDRESS}.nopass.key~g" ~ots/mediamtx/mediamtx.yml
-sudo sed -i "s~OTS_FOLDER~${HOME}/ots~g" ~ots/mediamtx/mediamtx.yml
+if [ "$LETS_ENCRYPT" == 1 ];
+then
+  sudo sed -i "s~SERVER_CERT_FILE~/etc/letsencrypt/live/${SERVER_ADDRESS}/fullchain.pem~g" ~/ots/mediamtx/mediamtx.yml
+  sudo sed -i "s~SERVER_KEY_FILE~/etc/letsencrypt/live/${SERVER_ADDRESS}/privkey.pem~g" ~ots/mediamtx/mediamtx.yml
+  sudo sed -i "s~OTS_FOLDER~${HOME}/ots~g" ~ots/mediamtx/mediamtx.yml
+else
+  sudo sed -i "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/${SERVER_ADDRESS}/${SERVER_ADDRESS}.pem~g" ~/ots/mediamtx/mediamtx.yml
+  sudo sed -i "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/${SERVER_ADDRESS}/${SERVER_ADDRESS}.nopass.key~g" ~ots/mediamtx/mediamtx.yml
+  sudo sed -i "s~OTS_FOLDER~${HOME}/ots~g" ~ots/mediamtx/mediamtx.yml
+fi
 
 sudo systemctl daemon-reload
 sudo systemctl enable mediamtx
@@ -151,10 +194,16 @@ echo "${GREEN}Setting up nginx...${NC}"
 sudo rm -f /etc/nginx/sites-enabled/*
 sudo cp ots_proxy /etc/nginx/sites-available/
 
-sudo sed -i "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/${SERVER_ADDRESS}/${SERVER_ADDRESS}.pem~g" /etc/nginx/sites-available/ots_proxy
-sudo sed -i "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/${SERVER_ADDRESS}/${SERVER_ADDRESS}.nopass.key~g" /etc/nginx/sites-available/ots_proxy
-sudo sed -i "s~CA_CERT_FILE~${HOME}/ots/ca/ca.pem~g" /etc/nginx/sites-available/ots_proxy
-
+if [ "$LETS_ENCRYPT" == 1 ];
+then
+  sudo sed -i "s~SERVER_CERT_FILE~/etc/letsencrypt/live/${SERVER_ADDRESS}/fullchain.pem~g" /etc/nginx/sites-available/ots_proxy
+  sudo sed -i "s~SERVER_KEY_FILE~/etc/letsencrypt/live/${SERVER_ADDRESS}/privkey.pem~g" /etc/nginx/sites-available/ots_proxy
+  sudo sed -i "s~CA_CERT_FILE~${HOME}/ots/ca/ca.pem~g" /etc/nginx/sites-available/ots_proxy
+else
+  sudo sed -i "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/${SERVER_ADDRESS}/${SERVER_ADDRESS}.pem~g" /etc/nginx/sites-available/ots_proxy
+  sudo sed -i "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/${SERVER_ADDRESS}/${SERVER_ADDRESS}.nopass.key~g" /etc/nginx/sites-available/ots_proxy
+  sudo sed -i "s~CA_CERT_FILE~${HOME}/ots/ca/ca.pem~g" /etc/nginx/sites-available/ots_proxy
+fi
 sudo ln -s /etc/nginx/sites-available/ots_proxy /etc/nginx/sites-enabled/ots_proxy
 
 sudo systemctl enable nginx
