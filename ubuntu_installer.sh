@@ -70,6 +70,45 @@ while [ "$SERVER_ADDRESS" == "" ]; do
   done
 done
 
+ENABLE_EMAIL=""
+
+PS3="${GREEN} Require users to register with an email address? [y/N] ${NC}"
+while [ "$ENABLE_EMAIL" == "" ]; do
+  select confirm in Y N; do
+    case $confirm in
+        "^[yY]$")
+          ENABLE_EMAIL=1
+          break
+          ;;
+        *)
+          ENABLE_EMAIL=0
+          break
+          ;;
+        esac
+  done
+done
+
+if [ "$ENABLE_EMAIL" == 1 ];
+then
+  sed -i 's/OTS_ENABLE_EMAIL = False/OTS_ENABLE_EMAIL = True/g' /opt/OpenTAKServer/opentakserver/config.py
+
+  read -p "${GREEN}What is your email address? This address will be used to send messages to users and be associated with the admin account: ${NC}" ADMIN_EMAIL
+  read -p "${GREEN}What is your email address password or Google app password? ${NC}" EMAIL_PASS
+  read -p "${GREEN}What is your SMTP server address [smtp.gmail.com]? ${NC}" SMTP_SERVER
+  SMTP_SERVER=${SMTP_SERVER:-smtp.gmail.com}
+  read -p "${GREEN}What port does your SMTP server use? [465]? ${NC}" SMTP_PORT
+  SMTP_PORT=${SMTP_PORT:-465}
+  read -p "${GREEN}Does your SMTP server use SSL? [Y/n]? ${NC}" SMTP_SSL
+  SMTP_SSL=${SMTP_SSL:-Y}
+
+  sed -i "s/MAIL_SERVER = 'smtp.gmail.com'/MAIL_SERVER = '${MAIL_SERVER}'/g" /opt/OpenTAKServer/opentakserver/config.py
+  sed -i "s/MAIL_PORT = 'smtp.gmail.com'/MAIL_PORT = '${MAIL_PORT}'/g" /opt/OpenTAKServer/opentakserver/config.py
+  if [[ $SMTP_SSL =~ ^[nN] ]];
+  then
+    sed -i "s/MAIL_USE_SSL = True/MAIL_USE_SSL = False/g" /opt/OpenTAKServer/opentakserver/config.py
+  fi
+fi
+
 echo "${GREEN}Creating certificate authority...${NC}}"
 
 mkdir -p ~/ots/ca
@@ -137,6 +176,12 @@ echo "node_id = '$(python3 -c "import random; import string; print(''.join(rando
 echo "security_password_salt = '$(python3 -c "import secrets; print(secrets.SystemRandom().getrandbits(128))")'" >> /opt/OpenTAKServer/opentakserver/secret_key.py
 echo "mediamtx_token = '${MTX_TOKEN}'" >> /opt/OpenTAKServer/opentakserver/secret_key.py
 echo "server_address = '${SERVER_ADDRESS}'" >> /opt/OpenTAKServer/opentakserver/secret_key.py
+if [ "$ENABLE_EMAIL" == 1 ];
+then
+  echo "mail_username = '${ADMIN_EMAIL}'" >> /opt/OpenTAKServer/opentakserver/secret_key.py
+  echo "mail_password = '${EMAIL_PASS}'" >> /opt/OpenTAKServer/opentakserver/secret_key.py
+fi
+echo "totp_secrets = '$(python3 -c "import passlib; passlib.totp.generate_secret()")'" >> /opt/OpenTAKServer/opentakserver/secret_key.py
 
 sudo systemctl daemon-reload
 sudo systemctl enable opentakserver
