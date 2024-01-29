@@ -3,7 +3,7 @@
 . /etc/os-release
 . colors.sh
 
-IP_REGEX="^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$"
+IP_REGEX="^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$"
 
 if [ "$NAME" != "Ubuntu" ]
 then
@@ -27,13 +27,51 @@ echo "${GREEN}Installing packages via apt. You may be prompted for your sudo pas
 
 sudo apt update && sudo apt upgrade -y
 sudo apt install curl python3 python3-pip rabbitmq-server git openssl nginx -y
-pip3 install poetry
+sudo pip3 install poetry pyotp
 sudo git clone https://github.com/brian7704/OpenTAKServer.git /opt/OpenTAKServer
 sudo chown "$USERNAME":"$USERNAME" /opt/OpenTAKServer -R
 poetry config virtualenvs.in-project true
 cd /opt/OpenTAKServer && poetry update && poetry install
 
 cd "$INSTALLER_DIR" || exit
+
+INSTALL_ZEROTIER=""
+while :
+do
+  read -p "${GREEN}Would you like to install ZeroTier?${NC} [y/n]" INSTALL_ZEROTIER
+  if [[ "$INSTALL_ZEROTIER" =~ [yY]|[yY][eE][sS] ]]; then
+    INSTALL_ZEROTIER=1
+    break
+  elif [[ "$INSTALL_ZEROTIER" =~ [nN]|[nN][oO] ]]; then
+    INSTALL_ZEROTIER=0
+    break
+  else
+    echo "${RED}Invalid input"
+  fi
+done
+
+if [ "$INSTALL_ZEROTIER" == 1 ];
+then
+  read -p "${GREEN}What is your ZeroTier network ID? ${NC}" ZT_NETWORK_ID
+  curl -s 'https://raw.githubusercontent.com/zerotier/ZeroTierOne/master/doc/contact%40zerotier.com.gpg' | gpg --import && \
+  curl -s 'https://install.zerotier.com/' -o /tmp/zerotier_installer.sh
+  if gpg --verify /tmp/zerotier_installer.sh; then
+    sudo NEEDRESTART_MODE=a bash /tmp/zerotier_installer.sh
+  fi
+
+  while :
+  do
+      ZT_JOIN=$(sudo zerotier-cli join "$ZT_NETWORK_ID")
+      echo "$ZT_JOIN"
+      if [ "$ZT_JOIN" != "200 join OK" ]; then
+        echo "${RED}Failed to join network ${ZT_NETWORK_ID}."
+        read -p "${GREEN}Please re-enter your ZeroTier network ID: ${NC}" ZT_NETWORK_ID
+      else
+        break
+      fi
+  done
+  read -p "${GREEN}ZeroTier has been installed. Please log into your ZeroTier admin account and authorize this server and then press enter to continue.${NC}"
+fi
 
 IP_ADDRESSES=()
 
@@ -53,21 +91,16 @@ PS3="${GREEN}Which address will users connect to? ${NC}"
 while [ "$SERVER_ADDRESS" == "" ]; do
   select ip in "${IP_ADDRESSES[@]}"
   do
-    case $ip in
-      "Other IP or domain")
+    if [ "$ip" == "Other IP or domain" ]; then
         read -p "Please enter the domain or IP: " SERVER_ADDRESS
         break
-        ;;
-      $IP_REGEX)
+    elif [[ "$ip" =~ $IP_REGEX ]]; then
         SERVER_ADDRESS=$ip
         break
-        ;;
-      *)
-        echo "Invalid option";;
-      esac
-    echo "$ip"
-    SERVER_ADDRESS=$ip
-    break
+    else
+        echo "${RED}Invalid option ${ip}${NC}";
+    fi
+    echo "SERVER_ADDRESS = ${SERVER_ADDRESS}"
   done
 done
 
@@ -75,21 +108,19 @@ LETS_ENCRYPT=""
 
 if ! [[ $SERVER_ADDRESS =~ $IP_REGEX ]]
 then
-  PS3="${GREEN}Looks like you're using a domain for your server address. Would you like to get a free SSL certificate from Let's Encrypt?{$NC} [y/N]"
-  while [ "$LETS_ENCRYPT" == "" ]; do
-    select confirm in Y N; do
-      case $confirm in
-          "^[yY]$")
-            LETS_ENCRYPT=1
-            break
-            ;;
-          *)
-            LETS_ENCRYPT=0
-            break
-            ;;
-          esac
-    done
-  done
+  while :
+do
+  read -p "${GREEN}Looks like you're using a domain for your server address. Would you like to get a free SSL certificate from Let's Encrypt?${NC} [y/n]" ENABLE_EMAIL
+  if [[ "$LETS_ENCRYPT" =~ [yY]|[yY][eE][sS] ]]; then
+    LETS_ENCRYPT=1
+    break
+  elif [[ "$LETS_ENCRYPT" =~ [nN]|[nN][oO] ]]; then
+    LETS_ENCRYPT=0
+    break
+  else
+    echo "${RED}Invalid input"
+  fi
+done
 fi
 
 if [ "$LETS_ENCRYPT" == 1 ];
@@ -107,21 +138,18 @@ then
 fi
 
 ENABLE_EMAIL=""
-
-PS3="${GREEN} Require users to register with an email address? [y/N] ${NC}"
-while [ "$ENABLE_EMAIL" == "" ]; do
-  select confirm in Y N; do
-    case $confirm in
-        "^[yY]$")
-          ENABLE_EMAIL=1
-          break
-          ;;
-        *)
-          ENABLE_EMAIL=0
-          break
-          ;;
-        esac
-  done
+while :
+do
+  read -p "${GREEN}Require users to register with an email address?${NC} [y/n]" ENABLE_EMAIL
+  if [[ "$ENABLE_EMAIL" =~ [yY]|[yY][eE][sS] ]]; then
+    ENABLE_EMAIL=1
+    break
+  elif [[ "$ENABLE_EMAIL" =~ [nN]|[nN][oO] ]]; then
+    ENABLE_EMAIL=0
+    break
+  else
+    echo "${RED}Invalid input"
+  fi
 done
 
 if [ "$ENABLE_EMAIL" == 1 ];
@@ -145,7 +173,7 @@ then
   fi
 fi
 
-echo "${GREEN}Creating certificate authority...${NC}}"
+echo "${GREEN}Creating certificate authority...${NC}"
 
 mkdir -p ~/ots/ca
 cp "$INSTALLER_DIR"/config.cfg ~/ots/ca/ca_config.cfg
@@ -178,12 +206,12 @@ EOF
 if [ "$LETS_ENCRYPT" == 1 ];
 then
   sudo sed -i "s~SERVER_CERT_FILE~/etc/letsencrypt/live/${SERVER_ADDRESS}/fullchain.pem~g" ~/ots/mediamtx/mediamtx.yml
-  sudo sed -i "s~SERVER_KEY_FILE~/etc/letsencrypt/live/${SERVER_ADDRESS}/privkey.pem~g" ~ots/mediamtx/mediamtx.yml
-  sudo sed -i "s~OTS_FOLDER~${HOME}/ots~g" ~ots/mediamtx/mediamtx.yml
+  sudo sed -i "s~SERVER_KEY_FILE~/etc/letsencrypt/live/${SERVER_ADDRESS}/privkey.pem~g" ~/ots/mediamtx/mediamtx.yml
+  sudo sed -i "s~OTS_FOLDER~${HOME}/ots~g" ~/ots/mediamtx/mediamtx.yml
 else
   sudo sed -i "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/${SERVER_ADDRESS}/${SERVER_ADDRESS}.pem~g" ~/ots/mediamtx/mediamtx.yml
-  sudo sed -i "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/${SERVER_ADDRESS}/${SERVER_ADDRESS}.nopass.key~g" ~ots/mediamtx/mediamtx.yml
-  sudo sed -i "s~OTS_FOLDER~${HOME}/ots~g" ~ots/mediamtx/mediamtx.yml
+  sudo sed -i "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/${SERVER_ADDRESS}/${SERVER_ADDRESS}.nopass.key~g" ~/ots/mediamtx/mediamtx.yml
+  sudo sed -i "s~OTS_FOLDER~${HOME}/ots~g" ~/ots/mediamtx/mediamtx.yml
 fi
 
 sudo systemctl daemon-reload
@@ -229,8 +257,11 @@ if [ "$ENABLE_EMAIL" == 1 ];
 then
   echo "mail_username = '${ADMIN_EMAIL}'" >> /opt/OpenTAKServer/opentakserver/secret_key.py
   echo "mail_password = '${EMAIL_PASS}'" >> /opt/OpenTAKServer/opentakserver/secret_key.py
+else
+  echo "mail_username = ''" >> /opt/OpenTAKServer/opentakserver/secret_key.py
+  echo "mail_password = ''" >> /opt/OpenTAKServer/opentakserver/secret_key.py
 fi
-echo "totp_secrets = '$(python3 -c "import passlib; passlib.totp.generate_secret()")'" >> /opt/OpenTAKServer/opentakserver/secret_key.py
+echo "totp_secrets = {1: '$(python3 -c "import pyotp; print(pyotp.random_base32())")'}" >> /opt/OpenTAKServer/opentakserver/secret_key.py
 
 sudo systemctl daemon-reload
 sudo systemctl enable opentakserver
