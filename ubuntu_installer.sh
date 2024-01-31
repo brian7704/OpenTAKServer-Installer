@@ -24,9 +24,10 @@ cp iconsets.sqlite ~/ots/ots.db
 
 echo "${GREEN}Installing packages via apt. You may be prompted for your sudo password...${NC}"
 
-
-sudo apt update && sudo apt upgrade -y
-sudo apt install curl python3 python3-pip rabbitmq-server git openssl nginx -y
+curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+sudo apt update && sudo NEEDRESTART_MODE=a apt upgrade -y
+sudo NEEDRESTART_MODE=a apt install curl python3 python3-pip rabbitmq-server git openssl nginx yarn -y
 sudo pip3 install poetry pyotp
 sudo git clone https://github.com/brian7704/OpenTAKServer.git /opt/OpenTAKServer
 sudo chown "$USERNAME":"$USERNAME" /opt/OpenTAKServer -R
@@ -126,7 +127,7 @@ fi
 if [ "$LETS_ENCRYPT" == 1 ];
 then
   read -p "${YELLOW}Attempting to get a Let's Encrypt certificate for {$SERVER_ADDRESS}. Please make sure that ports 80 and 443 are forwarded from your firewall to this server. See https://certbot.eff.org/ for more details. Press enter to continue.${NC}"
-  sudo apt install certbot -y
+  sudo NEEDRESTART_MODE=a apt install certbot -y
   CERTBOT_EXIT_CODE=$(sudo certbot certonly --nginx -d "$SERVER_ADDRESS")
   if [ "$CERTBOT_EXIT_CODE" == 0 ];
   then
@@ -236,6 +237,12 @@ sudo ln -s /etc/nginx/sites-available/ots_proxy /etc/nginx/sites-enabled/ots_pro
 
 sudo systemctl enable nginx
 sudo systemctl restart nginx
+
+echo "${GREEN}Installing OpenTAKServer-UI${NC}"
+sudo git clone https://github.com/brian7704/OpenTAKServer-UI.git /opt/OpenTAKServer-UI
+cd /opt/OpenTAKServer-UI || exit
+sudo yarn build
+cp -r build/* /var/www/html
 
 sudo tee /etc/systemd/system/opentakserver.service >/dev/null << EOF
 [Unit]
