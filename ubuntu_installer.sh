@@ -27,7 +27,7 @@ echo "${GREEN}Installing packages via apt. You may be prompted for your sudo pas
 curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
 echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
 sudo apt update && sudo NEEDRESTART_MODE=a apt upgrade -y
-sudo NEEDRESTART_MODE=a apt install curl python3 python3-pip rabbitmq-server git openssl nginx yarn -y
+sudo NEEDRESTART_MODE=a apt install curl python3 python3-pip rabbitmq-server git openssl nginx yarn ffmpeg -y
 sudo pip3 install poetry pyotp
 sudo git clone https://github.com/brian7704/OpenTAKServer.git /opt/OpenTAKServer
 sudo chown "$USERNAME":"$USERNAME" /opt/OpenTAKServer -R
