@@ -24,14 +24,20 @@ cp iconsets.sqlite ~/ots/ots.db
 
 echo "${GREEN}Installing packages via apt. You may be prompted for your sudo password...${NC}"
 
-curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
-echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
 sudo apt update && sudo NEEDRESTART_MODE=a apt upgrade -y
-sudo NEEDRESTART_MODE=a apt install curl python3 python3-pip rabbitmq-server git openssl nginx yarn ffmpeg -y
+sudo NEEDRESTART_MODE=a apt install curl python3 python3-pip rabbitmq-server git openssl nginx ffmpeg -y
 sudo pip3 install poetry pyotp
-sudo git clone https://github.com/brian7704/OpenTAKServer.git /opt/OpenTAKServer
-sudo chown "$USERNAME":"$USERNAME" /opt/OpenTAKServer -R
+
+if [ -d "/opt/OpenTAKServer" ]; then
+  cd /opt/OpenTAKServer || exit
+  sudo git pull
+else
+  sudo git clone https://github.com/brian7704/OpenTAKServer.git /opt/OpenTAKServer
+  sudo chown "$USERNAME":"$USERNAME" /opt/OpenTAKServer -R
+fi
+
 poetry config virtualenvs.in-project true
+poetry config virtualenvs.options.system-site-packages true
 cd /opt/OpenTAKServer && poetry update && poetry install
 
 cd "$INSTALLER_DIR" || exit
@@ -72,6 +78,39 @@ then
       fi
   done
   read -p "${GREEN}ZeroTier has been installed. Please log into your ZeroTier admin account and authorize this server and then press enter to continue.${NC}"
+fi
+
+INSTALL_MUMBLE=""
+while :
+do
+  read -p "${GREEN}Would you like to install Mumble Server?${NC} [y/n]" INSTALL_MUMBLE
+  if [[ "$INSTALL_MUMBLE" =~ [yY]|[yY][eE][sS] ]]; then
+    INSTALL_MUMBLE=1
+    break
+  elif [[ "$INSTALL_MUMBLE" =~ [nN]|[nN][oO] ]]; then
+    INSTALL_MUMBLE=0
+    sed -i 's/OTS_ENABLE_MUMBLE_AUTHENTICATION = True/OTS_ENABLE_MUMBLE_AUTHENTICATION = False/g' /opt/OpenTAKServer/opentakserver/config.py
+    break
+  else
+    echo "${RED}Invalid input"
+  fi
+done
+
+if [ "$INSTALL_MUMBLE" == 1 ]; then
+  sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv B6391CB2CFBA643D
+  sudo apt-add-repository -s "deb http://zeroc.com/download/Ice/3.7/ubuntu`lsb_release -rs` stable main"
+
+  sudo add-apt-repository ppa:mumble/release
+  sudo apt update
+
+  sudo NEEDRESTART_MODE=a apt install mumble-server zeroc-ice-all-runtime zeroc-ice-all-dev -y
+
+  sudo sed -i '/ice="tcp -h 127.0.0.1 -p 6502"/s/^#//g' /etc/mumble-server.ini
+  sudo service mumble-server restart
+
+  PASSWORD_LOG=$(sudo grep -m 1 SuperUser /var/log/mumble-server/mumble-server.log)
+  PASSWORD=($PASSWORD_LOG)
+  read -p "${GREEN}Mumble Server is now installed. The SuperUser password is ${YELLOW}${PASSWORD[-1]}${GREEN}. Press enter to continue.${NC}"
 fi
 
 IP_ADDRESSES=()
@@ -238,11 +277,7 @@ sudo ln -s /etc/nginx/sites-available/ots_proxy /etc/nginx/sites-enabled/ots_pro
 sudo systemctl enable nginx
 sudo systemctl restart nginx
 
-echo "${GREEN}Installing OpenTAKServer-UI${NC}"
-sudo git clone https://github.com/brian7704/OpenTAKServer-UI.git /opt/OpenTAKServer-UI
-cd /opt/OpenTAKServer-UI || exit
-sudo yarn build
-cp -r build/* /var/www/html
+cd "$INSTALLER_DIR" || exit
 
 sudo tee /etc/systemd/system/opentakserver.service >/dev/null << EOF
 [Unit]
@@ -272,6 +307,6 @@ echo "totp_secrets = {1: '$(python3 -c "import pyotp; print(pyotp.random_base32(
 
 sudo systemctl daemon-reload
 sudo systemctl enable opentakserver
-systemctl start opentakserver
+sudo systemctl start opentakserver
 
 echo "${GREEN}Setup is complete and OpenTAKServer is running. ${NC}"
