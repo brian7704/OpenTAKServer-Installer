@@ -106,6 +106,7 @@ if [ "$INSTALL_MUMBLE" == 1 ]; then
   sudo NEEDRESTART_MODE=a apt install mumble-server zeroc-ice-all-runtime zeroc-ice-all-dev -y
 
   sudo sed -i '/ice="tcp -h 127.0.0.1 -p 6502"/s/^#//g' /etc/mumble-server.ini
+  sudo sed -i 's/icesecretwrite/;icesecretwrite/g' /etc/mumble-server.ini
   sudo service mumble-server restart
 
   PASSWORD_LOG=$(sudo grep -m 1 SuperUser /var/log/mumble-server/mumble-server.log)
