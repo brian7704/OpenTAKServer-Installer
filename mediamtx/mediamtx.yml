@@ -531,7 +531,7 @@ pathDefaults:
   # * G1, G2, ...: regular expression groups, if path name is
   #   a regular expression.
   # * MTX_SEGMENT_PATH: segment file path
-  runOnRecordSegmentCreate:
+  runOnRecordSegmentCreate: curl http://localhost:8081/api/mediamtx/webhook?path=$MTX_PATH&rtsp_port=$RTSP_PORT&segment_path=$MTX_SEGMENT_PATH&event=segment_record&token=MTX_TOKEN
 
   # Command to run when a recording segment is complete.
   # The following environment variables are available:
@@ -540,7 +540,7 @@ pathDefaults:
   # * G1, G2, ...: regular expression groups, if path name is
   #   a regular expression.
   # * MTX_SEGMENT_PATH: segment file path
-  runOnRecordSegmentComplete:
+  runOnRecordSegmentComplete: curl http://localhost:8081/api/mediamtx/webhook?path=$MTX_PATH&rtsp_port=$RTSP_PORT&segment_path=$MTX_SEGMENT_PATH&event=segment_record_complete&token=MTX_TOKEN
 
 ###############################################
 # Path settings
