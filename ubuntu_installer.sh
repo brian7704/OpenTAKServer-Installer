@@ -26,7 +26,7 @@ echo "${GREEN}Installing packages via apt. You may be prompted for your sudo pas
 
 sudo apt update && sudo NEEDRESTART_MODE=a apt upgrade -y
 sudo NEEDRESTART_MODE=a apt install curl python3 python3-pip rabbitmq-server git openssl nginx ffmpeg -y
-sudo pip3 install poetry pyotp
+sudo pip3 install poetry pyotp lastversion
 
 if [ -d "/opt/OpenTAKServer" ]; then
   cd /opt/OpenTAKServer || exit
@@ -229,9 +229,21 @@ mkdir -p ~/ots/mediamtx/recordings
 
 MTX_TOKEN=$(python3 -c "import secrets; print(secrets.SystemRandom().getrandbits(128))")
 
-cp mediamtx/linux_amd64/mediamtx ~/ots/mediamtx
-chmod +x ~/ots/mediamtx/mediamtx
-cp mediamtx/mediamtx.yml ~/ots/mediamtx
+cd ~/ots/mediamtx
+
+ARCH=$(uname -m)
+KERNEL_BITS=$(getconf LONG_BIT)
+if [ "$ARCH" == "x86_64" ]; then
+  lastversion --filter '~*linux_amd64' --assets download bluenviron/mediamtx
+elif [ "$KERNEL_BITS" == 32 ]; then
+  lastversion --filter '~*linux_armv7' --assets download bluenviron/mediamtx
+elif [ "$KERNEL_BITS" == 64 ]; then
+  lastversion --filter '~*linux_arm64v8' --assets download bluenviron/mediamtx
+fi
+
+tar -xf ./*.tar.gz
+cd "$INSTALLER_DIR"
+cp mediamtx.yml ~/ots/mediamtx/
 
 sudo sed -i "s/MTX_TOKEN/${MTX_TOKEN}/g" ~/ots/mediamtx/mediamtx.yml
 
