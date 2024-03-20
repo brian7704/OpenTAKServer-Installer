@@ -114,113 +114,13 @@ if [ "$INSTALL_MUMBLE" == 1 ]; then
   read -p "${GREEN}Mumble Server is now installed. The SuperUser password is ${YELLOW}${PASSWORD[-1]}${GREEN}. Press enter to continue.${NC}"
 fi
 
-IP_ADDRESSES=()
-
-PUBLIC_IP=$(curl https://ipinfo.io/ip) || ""
-IP_ADDRESSES+=("$PUBLIC_IP")
-echo "${GREEN}Got public IP: $PUBLIC_IP${NC}"
-
-export IFS=" "
-for ip in $(hostname --all-ip-addresses); do
-  IP_ADDRESSES+=("$ip")
-done
-
-IP_ADDRESSES+=("Other IP or domain")
-SERVER_ADDRESS=""
-
-PS3="${GREEN}Which address will users connect to? ${NC}"
-while [ "$SERVER_ADDRESS" == "" ]; do
-  select ip in "${IP_ADDRESSES[@]}"
-  do
-    if [ "$ip" == "Other IP or domain" ]; then
-        read -p "Please enter the domain or IP: " SERVER_ADDRESS
-        break
-    elif [[ "$ip" =~ $IP_REGEX ]]; then
-        SERVER_ADDRESS=$ip
-        break
-    else
-        echo "${RED}Invalid option ${ip}${NC}";
-    fi
-    echo "SERVER_ADDRESS = ${SERVER_ADDRESS}"
-  done
-done
-
-LETS_ENCRYPT=""
-
-if ! [[ $SERVER_ADDRESS =~ $IP_REGEX ]]
-then
-  while :
-do
-  read -p "${GREEN}Looks like you're using a domain for your server address. Would you like to get a free SSL certificate from Let's Encrypt?${NC} [y/n]" ENABLE_EMAIL
-  if [[ "$LETS_ENCRYPT" =~ [yY]|[yY][eE][sS] ]]; then
-    LETS_ENCRYPT=1
-    break
-  elif [[ "$LETS_ENCRYPT" =~ [nN]|[nN][oO] ]]; then
-    LETS_ENCRYPT=0
-    break
-  else
-    echo "${RED}Invalid input"
-  fi
-done
-fi
-
-if [ "$LETS_ENCRYPT" == 1 ];
-then
-  read -p "${YELLOW}Attempting to get a Let's Encrypt certificate for {$SERVER_ADDRESS}. Please make sure that ports 80 and 443 are forwarded from your firewall to this server. See https://certbot.eff.org/ for more details. Press enter to continue.${NC}"
-  sudo NEEDRESTART_MODE=a apt install certbot -y
-  CERTBOT_EXIT_CODE=$(sudo certbot certonly --nginx -d "$SERVER_ADDRESS")
-  if [ "$CERTBOT_EXIT_CODE" == 0 ];
-  then
-    read -p "${GREEN}Successfully obtained a certificate for ${SERVER_ADDRESS}. Press enter to continue.${NC}"
-  else
-    read -p "${RED}Failed to get a Let's Encrypt certificate. The installer will proceed with a self signed certificate. Press enter to continue."
-    LETS_ENCRYPT=0
-  fi
-fi
-
-ENABLE_EMAIL=""
-while :
-do
-  read -p "${GREEN}Require users to register with an email address?${NC} [y/n]" ENABLE_EMAIL
-  if [[ "$ENABLE_EMAIL" =~ [yY]|[yY][eE][sS] ]]; then
-    ENABLE_EMAIL=1
-    break
-  elif [[ "$ENABLE_EMAIL" =~ [nN]|[nN][oO] ]]; then
-    ENABLE_EMAIL=0
-    break
-  else
-    echo "${RED}Invalid input"
-  fi
-done
-
-if [ "$ENABLE_EMAIL" == 1 ];
-then
-  sed -i 's/OTS_ENABLE_EMAIL = False/OTS_ENABLE_EMAIL = True/g' /opt/OpenTAKServer/opentakserver/config.py
-
-  read -p "${GREEN}What is your email address? This address will be used to send messages to users and be associated with the admin account: ${NC}" ADMIN_EMAIL
-  read -p "${GREEN}What is your email address password or Google app password? ${NC}" EMAIL_PASS
-  read -p "${GREEN}What is your SMTP server address [smtp.gmail.com]? ${NC}" SMTP_SERVER
-  SMTP_SERVER=${SMTP_SERVER:-smtp.gmail.com}
-  read -p "${GREEN}What port does your SMTP server use? [465]? ${NC}" SMTP_PORT
-  SMTP_PORT=${SMTP_PORT:-465}
-  read -p "${GREEN}Does your SMTP server use SSL? [Y/n]? ${NC}" SMTP_SSL
-  SMTP_SSL=${SMTP_SSL:-Y}
-
-  sed -i "s/MAIL_SERVER = 'smtp.gmail.com'/MAIL_SERVER = '${MAIL_SERVER}'/g" /opt/OpenTAKServer/opentakserver/config.py
-  sed -i "s/MAIL_PORT = 'smtp.gmail.com'/MAIL_PORT = '${MAIL_PORT}'/g" /opt/OpenTAKServer/opentakserver/config.py
-  if [[ $SMTP_SSL =~ ^[nN] ]];
-  then
-    sed -i "s/MAIL_USE_SSL = True/MAIL_USE_SSL = False/g" /opt/OpenTAKServer/opentakserver/config.py
-  fi
-fi
-
 echo "${GREEN}Creating certificate authority...${NC}"
 
 mkdir -p ~/ots/ca
 cp "$INSTALLER_DIR"/config.cfg ~/ots/ca/ca_config.cfg
 
 bash ./makeRootCa.sh --ca-name OpenTAKServer-CA
-bash ./makeCert.sh server "$SERVER_ADDRESS"
+bash ./makeCert.sh server opentakserver
 
 cd "$INSTALLER_DIR" || exit
 
@@ -245,8 +145,6 @@ tar -xf ./*.tar.gz
 cd "$INSTALLER_DIR"
 cp mediamtx.yml ~/ots/mediamtx/
 
-sudo sed -i "s/MTX_TOKEN/${MTX_TOKEN}/g" ~/ots/mediamtx/mediamtx.yml
-
 sudo tee /etc/systemd/system/mediamtx.service >/dev/null << EOF
 [Unit]
 Wants=network.target
@@ -256,16 +154,10 @@ ExecStart=$HOME/ots/mediamtx/mediamtx $HOME/ots/mediamtx/mediamtx.yml
 WantedBy=multi-user.target
 EOF
 
-if [ "$LETS_ENCRYPT" == 1 ];
-then
-  sudo sed -i "s~SERVER_CERT_FILE~/etc/letsencrypt/live/${SERVER_ADDRESS}/fullchain.pem~g" ~/ots/mediamtx/mediamtx.yml
-  sudo sed -i "s~SERVER_KEY_FILE~/etc/letsencrypt/live/${SERVER_ADDRESS}/privkey.pem~g" ~/ots/mediamtx/mediamtx.yml
-  sudo sed -i "s~OTS_FOLDER~${HOME}/ots~g" ~/ots/mediamtx/mediamtx.yml
-else
-  sudo sed -i "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/${SERVER_ADDRESS}/${SERVER_ADDRESS}.pem~g" ~/ots/mediamtx/mediamtx.yml
-  sudo sed -i "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/${SERVER_ADDRESS}/${SERVER_ADDRESS}.nopass.key~g" ~/ots/mediamtx/mediamtx.yml
-  sudo sed -i "s~OTS_FOLDER~${HOME}/ots~g" ~/ots/mediamtx/mediamtx.yml
-fi
+sudo sed -i "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/${SERVER_ADDRESS}/${SERVER_ADDRESS}.pem~g" ~/ots/mediamtx/mediamtx.yml
+sudo sed -i "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/${SERVER_ADDRESS}/${SERVER_ADDRESS}.nopass.key~g" ~/ots/mediamtx/mediamtx.yml
+sudo sed -i "s~OTS_FOLDER~${HOME}/ots~g" ~/ots/mediamtx/mediamtx.yml
+
 
 sudo systemctl daemon-reload
 sudo systemctl enable mediamtx
@@ -275,16 +167,10 @@ echo "${GREEN}Setting up nginx...${NC}"
 sudo rm -f /etc/nginx/sites-enabled/*
 sudo cp ots_proxy /etc/nginx/sites-available/
 
-if [ "$LETS_ENCRYPT" == 1 ];
-then
-  sudo sed -i "s~SERVER_CERT_FILE~/etc/letsencrypt/live/${SERVER_ADDRESS}/fullchain.pem~g" /etc/nginx/sites-available/ots_proxy
-  sudo sed -i "s~SERVER_KEY_FILE~/etc/letsencrypt/live/${SERVER_ADDRESS}/privkey.pem~g" /etc/nginx/sites-available/ots_proxy
-  sudo sed -i "s~CA_CERT_FILE~${HOME}/ots/ca/ca.pem~g" /etc/nginx/sites-available/ots_proxy
-else
-  sudo sed -i "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/${SERVER_ADDRESS}/${SERVER_ADDRESS}.pem~g" /etc/nginx/sites-available/ots_proxy
-  sudo sed -i "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/${SERVER_ADDRESS}/${SERVER_ADDRESS}.nopass.key~g" /etc/nginx/sites-available/ots_proxy
-  sudo sed -i "s~CA_CERT_FILE~${HOME}/ots/ca/ca.pem~g" /etc/nginx/sites-available/ots_proxy
-fi
+sudo sed -i "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/${SERVER_ADDRESS}/${SERVER_ADDRESS}.pem~g" /etc/nginx/sites-available/ots_proxy
+sudo sed -i "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/${SERVER_ADDRESS}/${SERVER_ADDRESS}.nopass.key~g" /etc/nginx/sites-available/ots_proxy
+sudo sed -i "s~CA_CERT_FILE~${HOME}/ots/ca/ca.pem~g" /etc/nginx/sites-available/ots_proxy
+
 sudo ln -s /etc/nginx/sites-available/ots_proxy /etc/nginx/sites-enabled/ots_proxy
 
 sudo systemctl enable nginx
@@ -302,21 +188,6 @@ ExecStart=/usr/local/bin/poetry run python /opt/OpenTAKServer/opentakserver/app.
 [Install]
 WantedBy=multi-user.target
 EOF
-
-echo "secret_key = '$(python3 -c 'import secrets; print(secrets.token_hex())')'" > /opt/OpenTAKServer/opentakserver/secret_key.py
-echo "node_id = '$(python3 -c "import random; import string; print(''.join(random.choices(string.ascii_lowercase + string.digits, k=64)))")'" >> /opt/OpenTAKServer/opentakserver/secret_key.py
-echo "security_password_salt = '$(python3 -c "import secrets; print(secrets.SystemRandom().getrandbits(128))")'" >> /opt/OpenTAKServer/opentakserver/secret_key.py
-echo "mediamtx_token = '${MTX_TOKEN}'" >> /opt/OpenTAKServer/opentakserver/secret_key.py
-echo "server_address = '${SERVER_ADDRESS}'" >> /opt/OpenTAKServer/opentakserver/secret_key.py
-if [ "$ENABLE_EMAIL" == 1 ];
-then
-  echo "mail_username = '${ADMIN_EMAIL}'" >> /opt/OpenTAKServer/opentakserver/secret_key.py
-  echo "mail_password = '${EMAIL_PASS}'" >> /opt/OpenTAKServer/opentakserver/secret_key.py
-else
-  echo "mail_username = ''" >> /opt/OpenTAKServer/opentakserver/secret_key.py
-  echo "mail_password = ''" >> /opt/OpenTAKServer/opentakserver/secret_key.py
-fi
-echo "totp_secrets = {1: '$(python3 -c "import pyotp; print(pyotp.random_base32())")'}" >> /opt/OpenTAKServer/opentakserver/secret_key.py
 
 sudo systemctl daemon-reload
 sudo systemctl enable opentakserver
