@@ -1,4 +1,11 @@
 server {
+        # Uncomment this if you're using a Let's Encrypt certificate and nginx is listening on port 443
+        #if ($server_port = 80) {
+        #    return 301 https://$host$request_uri;
+        #}
+
+        listen 80;
+        listen [::]:80;
         listen 8080 default_server;
         listen [::]:8080 default_server;
 
