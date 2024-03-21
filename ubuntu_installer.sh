@@ -161,13 +161,16 @@ sudo systemctl start mediamtx
 
 echo "${GREEN}Setting up nginx...${NC}"
 sudo rm -f /etc/nginx/sites-enabled/*
-sudo cp ots_proxy /etc/nginx/sites-available/
+sudo cp nginx_configs/* /etc/nginx/sites-available/
 
-sudo sed -i "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.pem~g" /etc/nginx/sites-available/ots_proxy
-sudo sed -i "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.nopass.key~g" /etc/nginx/sites-available/ots_proxy
-sudo sed -i "s~CA_CERT_FILE~${HOME}/ots/ca/ca.pem~g" /etc/nginx/sites-available/ots_proxy
+sudo sed -i "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.pem~g" /etc/nginx/sites-available/ots_https
+sudo sed -i "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.pem~g" /etc/nginx/sites-available/ots_certificate_enrollment
+sudo sed -i "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.nopass.key~g" /etc/nginx/sites-available/ots_https
+sudo sed -i "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.nopass.key~g" /etc/nginx/sites-available/ots_certificate_enrollment
+sudo sed -i "s~CA_CERT_FILE~${HOME}/ots/ca/ca.pem~g" /etc/nginx/sites-available/ots_https
+sudo sed -i "s~CA_CERT_FILE~${HOME}/ots/ca/ca.pem~g" /etc/nginx/sites-available/ots_certificate_enrollment
 
-sudo ln -s /etc/nginx/sites-available/ots_proxy /etc/nginx/sites-enabled/ots_proxy
+sudo ln -s /etc/nginx/sites-available/ots_* /etc/nginx/sites-enabled/
 
 sudo systemctl enable nginx
 sudo systemctl restart nginx
