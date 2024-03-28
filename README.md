@@ -5,9 +5,28 @@ there will also be an installer for Raspberry Pi. If you would like an installer
 free to open an issue and request it.
 
 ## Usage
+
+### Ubuntu
 ```
 $ bash ubuntu_installer.sh
 ```
+
+### Raspberry Pi
+```
+$ bash raspberry_pi_installer.sh
+```
+
+### Windows
+
+The script will install the [Chocolatey](https://chocolatey.org/) package manager which is used to install
+the prerequisites (RabbitMQ, nginx, git, sed, python3, and openssl). It will also install services for MediaMTX
+and OpenTAKServer. These services will run as the user you are logged in as and require a password. Make sure
+your user account has a password enabled. OpenTAKServer and all its data will install to C:\users\your_username\ots
+
+1. Open Powershell as an administrator
+2. Run `Set-ExecutionPolicy RemoteSigned` and type `Y` at the prompt
+3. Run `OpenTAKServer-Installer\windows_installer.ps1`
+4. When installation is finished, run `Set-ExecutionPolicy Restricted`
 
 ## Notes
 
