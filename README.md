@@ -24,7 +24,7 @@ and OpenTAKServer. These services will run as the user you are logged in as and 
 your user account has a password enabled. OpenTAKServer and all its data will install to C:\users\your_username\ots
 
 1. Open Powershell as an administrator
-2. Run `Set-ExecutionPolicy RemoteSigned` and type `Y` at the prompt
+2. Run `Set-ExecutionPolicy Unrestricted` and type `Y` at the prompt
 3. Run `OpenTAKServer-Installer\windows_installer.ps1`
 4. When installation is finished, run `Set-ExecutionPolicy Restricted`
 

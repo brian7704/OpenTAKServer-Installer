@@ -26,11 +26,11 @@ $Env:Path += ";$env:USERPROFILE\AppData\Roaming\Python\Scripts"; setx PATH "$Env
 $NEW_PATH = $Env:Path += ";$env:USERPROFILE\AppData\Roaming\Python\Scripts";
 [Environment]::SetEnvironmentVariable("PATH", $NEW_PATH, "User")
 
-Write-Host "Installing Poetry..." -ForegroundColor Green -BackgroundColor Black
-(Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | python - --git https://github.com/python-poetry/poetry.git@main
-
 Write-Host "Installing prerequisites..." -ForegroundColor Green -BackgroundColor Black
 choco install python3 openssl rabbitmq nginx sed git jdk8 -y
+
+Write-Host "Installing Poetry..." -ForegroundColor Green -BackgroundColor Black
+(Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | python - --git https://github.com/python-poetry/poetry.git@main
 
 # Need this so the openssl pkcs12 -legacy option works
 [Environment]::SetEnvironmentVariable("OPENSSL_MODULES", "C:\Program Files\OpenSSL-Win64\bin", "Machine")
