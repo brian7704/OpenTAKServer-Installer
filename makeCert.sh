@@ -3,10 +3,11 @@
 #  Optionally, you may also edit config.cfg, although unless you know what
 #  you are doing, you probably shouldn't.
 
-. cert-metadata.sh
-. colors.sh
+INSTALLER_DIR=/tmp/ots_installer
 
-INSTALLER_DIR=$(pwd)
+. "$INSTALLER_DIR"/cert-metadata.sh
+. "$INSTALLER_DIR"/colors.sh
+
 mkdir -p "$DIR"
 cd "$DIR"
 mkdir -p certs
