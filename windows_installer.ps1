@@ -21,11 +21,6 @@ Write-Host "Installing Chocolatey..." -ForegroundColor Green -BackgroundColor Bl
 # https://chocolatey.org/install#individual
 Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 
-# Add poetry to the PATH environment variable
-$Env:Path += ";$env:USERPROFILE\AppData\Roaming\Python\Scripts"; setx PATH "$Env:Path"
-$NEW_PATH = $Env:Path += ";$env:USERPROFILE\AppData\Roaming\Python\Scripts";
-[Environment]::SetEnvironmentVariable("PATH", $NEW_PATH, "User")
-
 Write-Host "Installing prerequisites..." -ForegroundColor Green -BackgroundColor Black
 choco install python3 openssl rabbitmq nginx sed git jdk8 -y
 
@@ -38,9 +33,9 @@ refreshenv
 pip install opentakserver
 
 Write-Host "Installing MediaMTX.." -ForegroundColor Green -BackgroundColor Black
-$url = poetry run lastversion --filter '~*windows' --assets bluenviron/mediamtx
+$url = lastversion --filter '~*windows' --assets bluenviron/mediamtx
 $filename = $url.Split("/")[-1]
-poetry run lastversion --filter '~*windows' -o $DATA_DIR\mediamtx\$filename --assets download bluenviron/mediamtx
+lastversion --filter '~*windows' -o $DATA_DIR\mediamtx\$filename --assets download bluenviron/mediamtx
 Set-Location $DATA_DIR\mediamtx
 Expand-Archive -Path mediamtx*.zip -DestinationPath . -Force
 Remove-Item $DATA_DIR\mediamtx\mediamtx.yml -Force
