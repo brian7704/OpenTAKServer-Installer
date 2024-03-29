@@ -30,7 +30,7 @@ echo "${GREEN}Installing packages via apt. You may be prompted for your sudo pas
 sudo apt update && sudo NEEDRESTART_MODE=a apt upgrade -y
 sudo NEEDRESTART_MODE=a apt install curl python3 python3-pip python3-venv rabbitmq-server openssl nginx ffmpeg openjdk-17-jre-headless -y
 
-echo "${GREEN} Installing OpenTAKServer from PyPI...${NC}"
+echo "${GREEN}Installing OpenTAKServer from PyPI...${NC}"
 python3 -m venv ~/.opentakserver_venv
 source "$HOME"/.opentakserver_venv/bin/activate
 pip3 install opentakserver
@@ -83,7 +83,6 @@ do
     break
   elif [[ "$INSTALL_MUMBLE" =~ [nN]|[nN][oO] ]]; then
     INSTALL_MUMBLE=0
-    sed -i 's/OTS_ENABLE_MUMBLE_AUTHENTICATION = True/OTS_ENABLE_MUMBLE_AUTHENTICATION = False/g' /opt/OpenTAKServer/opentakserver/config.py
     break
   else
     echo "${RED}Invalid input${NC}"
@@ -112,12 +111,14 @@ mkdir -p ~/ots/ca
 wget https://github.com/brian7704/OpenTAKServer-Installer/raw/master/config.cfg -qO "$INSTALLER_DIR"/config.cfg
 cp "$INSTALLER_DIR"/config.cfg ~/ots/ca/ca_config.cfg
 
-cd "INSTALLER_DIR"
+cd "$INSTALLER_DIR"
 bash ./makeRootCa.sh --ca-name OpenTAKServer-CA
 bash ./makeCert.sh server opentakserver
 
 echo "${GREEN}Installing mediamtx...${NC}"
 mkdir -p ~/ots/mediamtx/recordings
+
+cd ~/ots/mediamtx
 
 KERNEL_BITS=$(getconf LONG_BIT)
 if [ "$KERNEL_BITS" == 32 ]; then
@@ -184,5 +185,6 @@ sudo systemctl enable opentakserver
 sudo systemctl start opentakserver
 
 rm -fr $INSTALLER_DIR
+deactivate
 
 echo "${GREEN}Setup is complete and OpenTAKServer is running. ${NC}"

@@ -188,5 +188,6 @@ sudo systemctl enable opentakserver
 sudo systemctl start opentakserver
 
 rm -fr $INSTALLER_DIR
+deactivate
 
 echo "${GREEN}Setup is complete and OpenTAKServer is running. ${NC}"
