@@ -172,6 +172,10 @@ sudo ln -s /etc/nginx/sites-available/ots_* /etc/nginx/sites-enabled/
 sudo systemctl enable nginx
 sudo systemctl restart nginx
 
+mkdir -p /var/www/html/opentakserver
+cd /var/www/html/opentakserver
+lastversion --assets extract brian7704/OpenTAKServer-UI
+
 sudo tee /etc/systemd/system/opentakserver.service >/dev/null << EOF
 [Unit]
 Wants=network.target

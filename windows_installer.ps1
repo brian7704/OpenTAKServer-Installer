@@ -74,6 +74,8 @@ Do {
 Write-Host "Starting MediaMTX..." -ForegroundColor Green -BackgroundColor Black
 nssm start MediaMTX
 
+Write-Host "Configuring Nginx..." -ForegroundColor Green -BackgroundColor Black
+
 # Get the installed version of nginx
 Set-Location -Path C:\tools\nginx*
 $version = $pwd.Path.Split("-")[-1]
@@ -105,3 +107,12 @@ sed -i s/CA_CERT_FILE/$DATA_DIR\\ca\\ca.pem/g c:\tools\nginx-$version\conf\ots\o
 Set-Location -Path $INSTALLER_DIR
 
 nssm restart nginx
+
+Write-Host "Installing OpenTAKServer-UI..." -ForegroundColor Green -BackgroundColor Black
+if (-Not (Test-Path -Path c:\tools\nginx-$version\html\opentakserver))  {
+    New-Item -ItemType Directory -Path c:\tools\nginx-$version\html\opentakserver
+}
+Set-Location -Path c:\tools\nginx-$version\html\opentakserver
+lastversion --assets extract brian7704/OpenTAKServer-UI
+
+Write-Host "Installation Complete!" -ForegroundColor Green -BackgroundColor Black
