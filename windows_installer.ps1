@@ -35,26 +35,7 @@ choco install python3 openssl rabbitmq nginx sed git jdk8 -y
 Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
 refreshenv
 
-Write-Host "Installing Poetry..." -ForegroundColor Green -BackgroundColor Black
-(Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | python - --git https://github.com/python-poetry/poetry.git@main
-
-
-Write-Host "Installing OpenTAKServer..." -ForegroundColor Green -BackgroundColor Black
-if (-Not (Test-Path -Path "$DATA_DIR\OpenTAKServer")) {
-    Set-Location -Path $DATA_DIR
-    git clone https://github.com/brian7704/OpenTAKServer.git
-    Set-Location -Path $DATA_DIR\OpenTAKServer
-} else {
-    Write-Host "Pulling latest git..." -ForegroundColor Green -BackgroundColor Black
-    Set-Location -Path $DATA_DIR\OpenTAKServer
-    git pull
-}
-
-# Make a virtual environment and install OpenTAKServer
-poetry config virtualenvs.in-project true
-poetry config virtualenvs.options.system-site-packages true
-poetry update
-poetry install
+pip install opentakserver
 
 Write-Host "Installing MediaMTX.." -ForegroundColor Green -BackgroundColor Black
 $url = poetry run lastversion --filter '~*windows' --assets bluenviron/mediamtx
@@ -62,7 +43,8 @@ $filename = $url.Split("/")[-1]
 poetry run lastversion --filter '~*windows' -o $DATA_DIR\mediamtx\$filename --assets download bluenviron/mediamtx
 Set-Location $DATA_DIR\mediamtx
 Expand-Archive -Path mediamtx*.zip -DestinationPath . -Force
-Copy-Item -Path $INSTALLER_DIR/mediamtx_windows.yml -Destination $DATA_DIR\mediamtx\mediamtx.yml -Force
+Remove-Item $DATA_DIR\mediamtx\mediamtx.yml -Force
+Invoke-WebRequest https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/mediamtx.yml -OutFile $DATA_DIR\mediamtx\mediamtx.yml
 
 Write-Host "Creating a service for MediaMTX..." -ForegroundColor Green -BackgroundColor Black
 $password = Read-Host "Please enter your computer account's password"
@@ -101,13 +83,15 @@ nssm start MediaMTX
 Set-Location -Path C:\tools\nginx*
 $version = $pwd.Path.Split("-")[-1]
 
-# Copy nginx configs
+# Get nginx configs
 if (-Not(Test-Path -Path c:\tools\nginx-$version\conf\ots)) {
     New-Item -ItemType Directory -Path c:\tools\nginx-$version\conf\ots
 }
-Copy-Item -Path $INSTALLER_DIR\windows_nginx_configs\nginx.conf -Destination c:\tools\nginx-$version\conf\nginx.conf
-Copy-Item -Path $INSTALLER_DIR\windows_nginx_configs\proxy_params -Destination c:\tools\nginx-$version\conf\proxy_params
-Copy-Item -Path $INSTALLER_DIR\windows_nginx_configs\ots* -Destination c:\tools\nginx-$version\conf\ots\
+Invoke-WebRequest https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/windows_nginx_configs/nginx.conf -OutFile c:\tools\nginx-$version\conf\nginx.conf
+Invoke-WebRequest https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/windows_nginx_configs/proxy_params -OutFile c:\tools\nginx-$version\conf\proxy_params
+Invoke-WebRequest https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/windows_nginx_configs/ots_http.conf -OutFile c:\tools\nginx-$version\conf\ots\ots_http.conf
+Invoke-WebRequest https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/windows_nginx_configs/ots_https.conf -OutFile c:\tools\nginx-$version\conf\ots\ots_https.conf
+Invoke-WebRequest https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/windows_nginx_configs/ots_certificate_enrollment.conf -OutFile c:\tools\nginx-$version\conf\ots\ots_certificate_enrollment.conf
 
 # Configure nginx
 sed -i s/NGINX_VERSION/$version/g c:\tools\nginx-$version\conf\nginx.conf
