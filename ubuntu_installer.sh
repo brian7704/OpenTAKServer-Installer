@@ -11,7 +11,7 @@ wget https://github.com/brian7704/OpenTAKServer-Installer/raw/master/colors.sh -
 
 if [ "$NAME" != "Ubuntu" ]
 then
-  read -p "${YELLOW} This installer is for Ubuntu but this system is $NAME. Do you want to run anyway? [y/N] ${NC}" confirm && [[ $confirm == [yY] || $confirm == [yY][eE][sS] ]] || exit 1
+  read -p "${YELLOW} This installer is for Ubuntu but this system is $NAME. Do you want to run anyway? [y/N] ${NC}" confirm < /dev/tty && [[ $confirm == [yY] || $confirm == [yY][eE][sS] ]] || exit 1
 fi
 
 USERNAME=$(whoami)
@@ -28,15 +28,18 @@ wget https://github.com/brian7704/OpenTAKServer-Installer/raw/master/iconsets.sq
 echo "${GREEN}Installing packages via apt. You may be prompted for your sudo password...${NC}"
 
 sudo apt update && sudo NEEDRESTART_MODE=a apt upgrade -y
-sudo NEEDRESTART_MODE=a apt install curl python3 python3-pip rabbitmq-server openssl nginx ffmpeg -y
-sudo pip3 install lastversion
+sudo NEEDRESTART_MODE=a apt install curl python3 python3-pip python3-venv rabbitmq-server openssl nginx ffmpeg openjdk-19-jre-headless -y
 
+echo "${GREEN} Installing OpenTAKServer from PyPI...${NC}"
+python3 -m venv ~/.opentakserver_venv
+source "$HOME"/.opentakserver_venv/bin/activate
 pip3 install opentakserver
+echo "${GREEN} OpenTAKServer Installed!${NC} ${?}"
 
 INSTALL_ZEROTIER=""
 while :
 do
-  read -p "${GREEN}Would you like to install ZeroTier?${NC} [y/n]" INSTALL_ZEROTIER
+  read -p "${GREEN}Would you like to install ZeroTier?${NC} [y/n]" INSTALL_ZEROTIER < /dev/tty
   if [[ "$INSTALL_ZEROTIER" =~ [yY]|[yY][eE][sS] ]]; then
     INSTALL_ZEROTIER=1
     break
@@ -44,13 +47,13 @@ do
     INSTALL_ZEROTIER=0
     break
   else
-    echo "${RED}Invalid input"
+    echo "${RED}Invalid input${NC}"
   fi
 done
 
 if [ "$INSTALL_ZEROTIER" == 1 ];
 then
-  read -p "${GREEN}What is your ZeroTier network ID? ${NC}" ZT_NETWORK_ID
+  read -p "${GREEN}What is your ZeroTier network ID? ${NC}" ZT_NETWORK_ID < /dev/tty
   curl -s 'https://raw.githubusercontent.com/zerotier/ZeroTierOne/master/doc/contact%40zerotier.com.gpg' | gpg --import && \
   curl -s 'https://install.zerotier.com/' -o /tmp/zerotier_installer.sh
   if gpg --verify /tmp/zerotier_installer.sh; then
@@ -63,18 +66,18 @@ then
       echo "$ZT_JOIN"
       if [ "$ZT_JOIN" != "200 join OK" ]; then
         echo "${RED}Failed to join network ${ZT_NETWORK_ID}."
-        read -p "${GREEN}Please re-enter your ZeroTier network ID: ${NC}" ZT_NETWORK_ID
+        read -p "${GREEN}Please re-enter your ZeroTier network ID: ${NC}" ZT_NETWORK_ID < /dev/tty
       else
         break
       fi
   done
-  read -p "${GREEN}ZeroTier has been installed. Please log into your ZeroTier admin account and authorize this server and then press enter to continue.${NC}"
+  read -p "${GREEN}ZeroTier has been installed. Please log into your ZeroTier admin account and authorize this server and then press enter to continue.${NC}" < /dev/tty
 fi
 
 INSTALL_MUMBLE=""
 while :
 do
-  read -p "${GREEN}Would you like to install Mumble Server?${NC} [y/n]" INSTALL_MUMBLE
+  read -p "${GREEN}Would you like to install Mumble Server?${NC} [y/n]" INSTALL_MUMBLE < /dev/tty
   if [[ "$INSTALL_MUMBLE" =~ [yY]|[yY][eE][sS] ]]; then
     INSTALL_MUMBLE=1
     break
@@ -82,7 +85,7 @@ do
     INSTALL_MUMBLE=0
     break
   else
-    echo "${RED}Invalid input"
+    echo "${RED}Invalid input${NC}"
   fi
 done
 
@@ -101,7 +104,7 @@ if [ "$INSTALL_MUMBLE" == 1 ]; then
 
   PASSWORD_LOG=$(sudo grep -m 1 SuperUser /var/log/mumble-server/mumble-server.log)
   PASSWORD=($PASSWORD_LOG)
-  read -p "${GREEN}Mumble Server is now installed. The SuperUser password is ${YELLOW}${PASSWORD[-1]}${GREEN}. Press enter to continue.${NC}"
+  read -p "${GREEN}Mumble Server is now installed. The SuperUser password is ${YELLOW}${PASSWORD[-1]}${GREEN}. Press enter to continue.${NC}" < /dev/tty
 fi
 
 echo "${GREEN}Creating certificate authority...${NC}"
@@ -153,7 +156,9 @@ sudo systemctl start mediamtx
 
 echo "${GREEN}Setting up nginx...${NC}"
 sudo rm -f /etc/nginx/sites-enabled/*
-sudo cp nginx_configs/* /etc/nginx/sites-available/
+sudo wget https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/online_installer/nginx_configs/ots_certificate_enrollment -qO /etc/nginx/sites-available/ots_certificate_enrollment
+sudo wget https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/online_installer/nginx_configs/ots_http -qO /etc/nginx/sites-available/ots_http
+sudo wget https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/online_installer/nginx_configs/ots_https -qO /etc/nginx/sites-available/ots_https
 
 sudo sed -i "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.pem~g" /etc/nginx/sites-available/ots_https
 sudo sed -i "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.pem~g" /etc/nginx/sites-available/ots_certificate_enrollment
@@ -172,8 +177,8 @@ sudo tee /etc/systemd/system/opentakserver.service >/dev/null << EOF
 Wants=network.target
 [Service]
 User=$(whoami)
-WorkingDirectory=/opt/OpenTAKServer
-ExecStart=/usr/local/bin/poetry run python /opt/OpenTAKServer/opentakserver/app.py
+WorkingDirectory=${HOME}/ots
+ExecStart=${HOME}/.opentakserver_venv/bin/python3 -m opentakserver.app
 [Install]
 WantedBy=multi-user.target
 EOF
