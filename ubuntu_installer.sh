@@ -34,7 +34,7 @@ echo "${GREEN} Installing OpenTAKServer from PyPI...${NC}"
 python3 -m venv ~/.opentakserver_venv
 source "$HOME"/.opentakserver_venv/bin/activate
 pip3 install opentakserver
-echo "${GREEN} OpenTAKServer Installed!${NC} ${?}"
+echo "${GREEN}OpenTAKServer Installed!${NC}"
 
 INSTALL_ZEROTIER=""
 while :
