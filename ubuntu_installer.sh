@@ -1,7 +1,13 @@
 #!/bin/bash
 
+INSTALLER_DIR=/tmp/ots_installer
+mkdir -p $INSTALLER_DIR
+cd $INSTALLER_DIR
+
+wget https://github.com/brian7704/OpenTAKServer-Installer/raw/master/colors.sh -qO "$INSTALLER_DIR"/colors.sh
+. "$INSTALLER_DIR"/colors.sh
+
 . /etc/os-release
-. colors.sh
 
 if [ "$NAME" != "Ubuntu" ]
 then
@@ -9,7 +15,6 @@ then
 fi
 
 USERNAME=$(whoami)
-INSTALLER_DIR=$(pwd)
 
 if [ "$USERNAME" == 'root' ]
 then
@@ -18,27 +23,15 @@ then
 fi
 
 mkdir -p ~/ots
-cp iconsets.sqlite ~/ots/ots.db
+wget https://github.com/brian7704/OpenTAKServer-Installer/raw/master/iconsets.sqlite -qO ~/ots/ots.db
 
 echo "${GREEN}Installing packages via apt. You may be prompted for your sudo password...${NC}"
 
 sudo apt update && sudo NEEDRESTART_MODE=a apt upgrade -y
-sudo NEEDRESTART_MODE=a apt install curl python3 python3-pip rabbitmq-server git openssl nginx ffmpeg -y
-sudo pip3 install poetry pyotp lastversion
+sudo NEEDRESTART_MODE=a apt install curl python3 python3-pip rabbitmq-server openssl nginx ffmpeg -y
+sudo pip3 install lastversion
 
-if [ -d "/opt/OpenTAKServer" ]; then
-  cd /opt/OpenTAKServer || exit
-  sudo git pull
-else
-  sudo git clone https://github.com/brian7704/OpenTAKServer.git /opt/OpenTAKServer
-  sudo chown "$USERNAME":"$USERNAME" /opt/OpenTAKServer -R
-fi
-
-poetry config virtualenvs.in-project true
-poetry config virtualenvs.options.system-site-packages true
-cd /opt/OpenTAKServer && poetry update && poetry install
-
-cd "$INSTALLER_DIR" || exit
+pip3 install opentakserver
 
 INSTALL_ZEROTIER=""
 while :
@@ -87,7 +80,6 @@ do
     break
   elif [[ "$INSTALL_MUMBLE" =~ [nN]|[nN][oO] ]]; then
     INSTALL_MUMBLE=0
-    sed -i 's/OTS_ENABLE_MUMBLE_AUTHENTICATION = True/OTS_ENABLE_MUMBLE_AUTHENTICATION = False/g' /opt/OpenTAKServer/opentakserver/config.py
     break
   else
     echo "${RED}Invalid input"
@@ -115,12 +107,14 @@ fi
 echo "${GREEN}Creating certificate authority...${NC}"
 
 mkdir -p ~/ots/ca
+wget https://github.com/brian7704/OpenTAKServer-Installer/raw/master/config.cfg -qO "$INSTALLER_DIR"/config.cfg
 cp "$INSTALLER_DIR"/config.cfg ~/ots/ca/ca_config.cfg
 
+# Generate CA
+wget https://github.com/brian7704/OpenTAKServer-Installer/raw/master/makeRootCa.sh -qO "$INSTALLER_DIR"/makeRootCa.sh
+wget https://github.com/brian7704/OpenTAKServer-Installer/raw/master/makeCert.sh -qO "$INSTALLER_DIR"/makeCert.sh
 bash ./makeRootCa.sh --ca-name OpenTAKServer-CA
 bash ./makeCert.sh server opentakserver
-
-cd "$INSTALLER_DIR" || exit
 
 echo "${GREEN}Installing mediamtx...${NC}"
 mkdir -p ~/ots/mediamtx/recordings
@@ -138,8 +132,7 @@ elif [ "$KERNEL_BITS" == 64 ]; then
 fi
 
 tar -xf ./*.tar.gz
-cd "$INSTALLER_DIR"
-cp mediamtx.yml ~/ots/mediamtx/
+wget https://github.com/brian7704/OpenTAKServer-Installer/raw/master/mediamtx.yml -qO ~/ots/mediamtx/mediamtx.yml
 
 sudo tee /etc/systemd/system/mediamtx.service >/dev/null << EOF
 [Unit]
@@ -153,7 +146,6 @@ EOF
 sudo sed -i "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.pem~g" ~/ots/mediamtx/mediamtx.yml
 sudo sed -i "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.nopass.key~g" ~/ots/mediamtx/mediamtx.yml
 sudo sed -i "s~OTS_FOLDER~${HOME}/ots~g" ~/ots/mediamtx/mediamtx.yml
-
 
 sudo systemctl daemon-reload
 sudo systemctl enable mediamtx
@@ -175,8 +167,6 @@ sudo ln -s /etc/nginx/sites-available/ots_* /etc/nginx/sites-enabled/
 sudo systemctl enable nginx
 sudo systemctl restart nginx
 
-cd "$INSTALLER_DIR" || exit
-
 sudo tee /etc/systemd/system/opentakserver.service >/dev/null << EOF
 [Unit]
 Wants=network.target
@@ -191,5 +181,7 @@ EOF
 sudo systemctl daemon-reload
 sudo systemctl enable opentakserver
 sudo systemctl start opentakserver
+
+rm -fr $INSTALLER_DIR
 
 echo "${GREEN}Setup is complete and OpenTAKServer is running. ${NC}"
