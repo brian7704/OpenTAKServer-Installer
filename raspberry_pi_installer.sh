@@ -9,7 +9,7 @@ wget https://github.com/brian7704/OpenTAKServer-Installer/raw/master/colors.sh -
 
 . /etc/os-release
 
-if [ "$NAME" != "aRaspbian GNU/Linux" ] && [ "$NAME" != "aDebian GNU/Linux" ]
+if [ "$NAME" != "Raspbian GNU/Linux" ] && [ "$NAME" != "Debian GNU/Linux" ]
 then
   read -p "${YELLOW} This installer is for Raspberry Pi OS but this system is $NAME. Do you want to run anyway? [y/N] ${NC}" confirm < /dev/tty && [[ $confirm == [yY] || $confirm == [yY][eE][sS] ]] || exit 1
 fi
