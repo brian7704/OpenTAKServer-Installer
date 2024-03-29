@@ -184,4 +184,6 @@ sudo systemctl daemon-reload
 sudo systemctl enable opentakserver
 sudo systemctl start opentakserver
 
+rm -fr $INSTALLER_DIR
+
 echo "${GREEN}Setup is complete and OpenTAKServer is running. ${NC}"
