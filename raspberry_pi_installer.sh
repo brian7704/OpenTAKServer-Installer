@@ -111,7 +111,10 @@ mkdir -p ~/ots/ca
 wget https://github.com/brian7704/OpenTAKServer-Installer/raw/master/config.cfg -qO "$INSTALLER_DIR"/config.cfg
 cp "$INSTALLER_DIR"/config.cfg ~/ots/ca/ca_config.cfg
 
+# Generate CA
 cd "$INSTALLER_DIR"
+wget https://github.com/brian7704/OpenTAKServer-Installer/raw/master/makeRootCa.sh -qO "$INSTALLER_DIR"/makeRootCa.sh
+wget https://github.com/brian7704/OpenTAKServer-Installer/raw/master/makeCert.sh -qO "$INSTALLER_DIR"/makeCert.sh
 bash ./makeRootCa.sh --ca-name OpenTAKServer-CA
 bash ./makeCert.sh server opentakserver
 
