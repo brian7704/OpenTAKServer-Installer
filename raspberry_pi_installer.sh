@@ -92,9 +92,7 @@ done
 
 if [ "$INSTALL_MUMBLE" == 1 ]; then
   sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv B6391CB2CFBA643D
-  sudo apt-add-repository -s "deb http://zeroc.com/download/Ice/3.7/ubuntu`lsb_release -rs` stable main"
-
-  sudo add-apt-repository ppa:mumble/release
+  sudo echo "deb http://zeroc.com/download/Ice/3.7/ubuntu`lsb_release -rs` stable main" > root@atakpi:/etc/apt/sources.list.d/zeroc.list
   sudo apt update
 
   sudo NEEDRESTART_MODE=a apt install mumble-server zeroc-ice-all-runtime zeroc-ice-all-dev -y
@@ -114,6 +112,7 @@ mkdir -p ~/ots/ca
 wget https://github.com/brian7704/OpenTAKServer-Installer/raw/master/config.cfg -qO "$INSTALLER_DIR"/config.cfg
 cp "$INSTALLER_DIR"/config.cfg ~/ots/ca/ca_config.cfg
 
+cd "INSTALLER_DIR"
 bash ./makeRootCa.sh --ca-name OpenTAKServer-CA
 bash ./makeCert.sh server opentakserver
 
@@ -122,9 +121,9 @@ mkdir -p ~/ots/mediamtx/recordings
 
 KERNEL_BITS=$(getconf LONG_BIT)
 if [ "$KERNEL_BITS" == 32 ]; then
-  poetry run lastversion --filter '~*linux_armv7' --assets download bluenviron/mediamtx -o ~/ots/mediamtx
+  lastversion --filter '~*linux_armv7' --assets download bluenviron/mediamtx -o ~/ots/mediamtx
 elif [ "$KERNEL_BITS" == 64 ]; then
-  poetry run lastversion --filter '~*linux_arm64v8' --assets download bluenviron/mediamtx -o ~/ots/mediamtx
+  lastversion --filter '~*linux_arm64v8' --assets download bluenviron/mediamtx -o ~/ots/mediamtx
 fi
 
 cd ~/ots/mediamtx
