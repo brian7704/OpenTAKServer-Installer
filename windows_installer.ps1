@@ -15,7 +15,7 @@ if (-Not (Test-Path -Path "$env:USERPROFILE\ots")) {
     New-Item -ItemType Directory -Path $DATA_DIR\mediamtx\recordings
 }
 
-Copy-Item -Path $INSTALLER_DIR\iconsets.sqlite -Destination $DATA_DIR\ots.db
+Invoke-WebRequest https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/iconsets.sqlitehttps://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/iconsets.sqlite -OutFile $DATA_DIR\ots.db
 
 Write-Host "Installing Chocolatey..." -ForegroundColor Green -BackgroundColor Black
 # https://chocolatey.org/install#individual
