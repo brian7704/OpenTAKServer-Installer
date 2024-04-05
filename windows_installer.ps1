@@ -30,6 +30,9 @@ choco install python3 openssl rabbitmq nginx sed git jdk8 -y
 Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
 refreshenv
 
+Set-Location -Path $DATA_DIR
+python -m venv .venv
+.\.venv\Scripts\activate
 pip install opentakserver
 
 Write-Host "Installing MediaMTX.." -ForegroundColor Green -BackgroundColor Black
@@ -54,7 +57,7 @@ sed -i s/SERVER_KEY_FILE/$DATA_DIR\\ca\\certs\\opentakserver\\opentakserver.nopa
 
 # Make a new service
 Write-Host "Creating a service for OpenTAKServer..." -ForegroundColor Green -BackgroundColor Black
-nssm install OpenTAKServer $DATA_DIR\OpenTAKServer\.venv\Scripts\python.exe $DATA_DIR\OpenTAKServer\opentakserver\app.py
+nssm install OpenTAKServer $DATA_DIR\.venv\Scripts\python.exe -m opentakserver.app
 nssm set OpenTAKServer ObjectName $Env:UserDomain\$Env:UserName $password
 nssm set OpenTAKServer AppStdout $DATA_DIR\service_stdout.log
 nssm set OpenTAKServer AppStderr $DATA_DIR\service_stderr.log
@@ -68,7 +71,6 @@ Do {
     $global:tries++
     if ($tries -gt 15) {
         Write-Host "Failed to create certificate authority, exiting..." -ForegroundColor Red -BackgroundColor Black
-        Exit
     }
 } while (-Not(Test-Path -Path $DATA_DIR/ca/certs/opentakserver/opentakserver.pem))
 Write-Host "Starting MediaMTX..." -ForegroundColor Green -BackgroundColor Black
@@ -114,5 +116,8 @@ if (-Not (Test-Path -Path c:\tools\nginx-$version\html\opentakserver))  {
 }
 Set-Location -Path c:\tools\nginx-$version\html\opentakserver
 lastversion --assets extract brian7704/OpenTAKServer-UI
+
+# Get out of the python venv
+deactivate
 
 Write-Host "Installation Complete!" -ForegroundColor Green -BackgroundColor Black
