@@ -91,7 +91,7 @@ done
 
 if [ "$INSTALL_MUMBLE" == 1 ]; then
   sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv B6391CB2CFBA643D
-  sudo echo "deb http://zeroc.com/download/Ice/3.7/ubuntu`lsb_release -rs` stable main" > root@atakpi:/etc/apt/sources.list.d/zeroc.list
+  sudo echo "deb http://zeroc.com/download/Ice/3.7/ubuntu`lsb_release -rs` stable main" | sudo tee /etc/apt/sources.list.d/zeroc.list
   sudo apt update
 
   sudo NEEDRESTART_MODE=a apt install mumble-server zeroc-ice-all-runtime zeroc-ice-all-dev -y
