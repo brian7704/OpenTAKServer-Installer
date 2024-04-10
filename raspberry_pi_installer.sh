@@ -31,7 +31,7 @@ sudo apt update && sudo NEEDRESTART_MODE=a apt upgrade -y
 sudo NEEDRESTART_MODE=a apt install curl python3 python3-pip python3-venv rabbitmq-server openssl nginx ffmpeg openjdk-17-jre-headless -y
 
 echo "${GREEN}Installing OpenTAKServer from PyPI...${NC}"
-python3 -m venv ~/.opentakserver_venv
+python3 -m venv --system-site-packages ~/.opentakserver_venv
 source "$HOME"/.opentakserver_venv/bin/activate
 pip3 install opentakserver
 echo "${GREEN}OpenTAKServer Installed!${NC}"
@@ -139,6 +139,7 @@ sudo tee /etc/systemd/system/mediamtx.service >/dev/null << EOF
 [Unit]
 Wants=network.target
 [Service]
+User=$(whoami)
 ExecStart=$HOME/ots/mediamtx/mediamtx $HOME/ots/mediamtx/mediamtx.yml
 [Install]
 WantedBy=multi-user.target
