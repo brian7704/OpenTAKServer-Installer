@@ -38,7 +38,7 @@ python -m venv .venv
 pip install opentakserver
 
 Write-Host "Installing MediaMTX.." -ForegroundColor Green -BackgroundColor Black
-$url = lastversion --filter '~*windows' --assets bluenviron/mediamtx
+$url = lastversion --filter '~*windows' --assets bluenviron/mediamtx --only 1.6.0
 $filename = $url.Split("/")[-1]
 lastversion --filter '~*windows' -o $DATA_DIR\mediamtx\$filename --assets download bluenviron/mediamtx
 Set-Location $DATA_DIR\mediamtx

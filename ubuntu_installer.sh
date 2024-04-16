@@ -28,7 +28,9 @@ wget https://github.com/brian7704/OpenTAKServer-Installer/raw/master/iconsets.sq
 echo "${GREEN}Installing packages via apt. You may be prompted for your sudo password...${NC}"
 
 sudo apt update && sudo NEEDRESTART_MODE=a apt upgrade -y
-sudo NEEDRESTART_MODE=a apt install curl python3 python3-pip python3-venv rabbitmq-server openssl nginx ffmpeg openjdk-19-jre-headless -y
+sudo NEEDRESTART_MODE=a apt install curl python3 python3-pip python3-venv rabbitmq-server openssl nginx ffmpeg openjdk-19-jre-headless iptables-persistent -y
+sudo cp $INSTALLER_DIR /etc/iptables/
+sudo iptables-restore < /etc/iptables/rules.v4
 
 echo "${GREEN} Installing OpenTAKServer from PyPI...${NC}"
 python3 -m venv --system-site-packages ~/.opentakserver_venv
@@ -127,11 +129,11 @@ cd ~/ots/mediamtx
 ARCH=$(uname -m)
 KERNEL_BITS=$(getconf LONG_BIT)
 if [ "$ARCH" == "x86_64" ]; then
-  lastversion --filter '~*linux_amd64' --assets download bluenviron/mediamtx
+  lastversion --filter '~*linux_amd64' --assets download bluenviron/mediamtx --only 1.6.0
 elif [ "$KERNEL_BITS" == 32 ]; then
-  lastversion --filter '~*linux_armv7' --assets download bluenviron/mediamtx
+  lastversion --filter '~*linux_armv7' --assets download bluenviron/mediamtx --only 1.6.0
 elif [ "$KERNEL_BITS" == 64 ]; then
-  lastversion --filter '~*linux_arm64v8' --assets download bluenviron/mediamtx
+  lastversion --filter '~*linux_arm64v8' --assets download bluenviron/mediamtx --only 1.6.0
 fi
 
 tar -xf ./*.tar.gz
