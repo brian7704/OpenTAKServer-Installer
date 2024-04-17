@@ -1,0 +1,11 @@
+/home/USERNAME/ots/logs/opentakserver.log {
+    weekly
+    rotate 12
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+    dateext
+    dateformat -%Y-%m-%d
+}
