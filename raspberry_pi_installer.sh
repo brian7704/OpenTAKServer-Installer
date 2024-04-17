@@ -28,9 +28,9 @@ wget https://github.com/brian7704/OpenTAKServer-Installer/raw/master/iconsets.sq
 echo "${GREEN}Installing packages via apt. You may be prompted for your sudo password...${NC}"
 
 sudo apt update && sudo NEEDRESTART_MODE=a apt upgrade -y
-sudo NEEDRESTART_MODE=a apt install curl python3 python3-pip python3-venv rabbitmq-server openssl nginx ffmpeg openjdk-17-jre-headless iptables-persistent -y
-sudo cp $INSTALLER_DIR /etc/iptables/
-sudo iptables-restore < /etc/iptables/rules.v4
+sudo NEEDRESTART_MODE=a apt install curl python3 python3-pip python3-venv rabbitmq-server openssl nginx ffmpeg openjdk-17-jre-headless -y
+#sudo cp $INSTALLER_DIR /etc/iptables/
+#sudo iptables-restore < /etc/iptables/rules.v4
 
 echo "${GREEN}Installing OpenTAKServer from PyPI...${NC}"
 python3 -m venv --system-site-packages ~/.opentakserver_venv
