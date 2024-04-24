@@ -182,7 +182,8 @@ cd "$INSTALLER_DIR" || exit
 
 sudo tee /etc/systemd/system/opentakserver.service >/dev/null << EOF
 [Unit]
-Wants=network.target
+Wants=network.target rabbitmq-server.service
+After=network.target rabbitmq-server.service
 [Service]
 User=$(whoami)
 WorkingDirectory=${HOME}/ots
