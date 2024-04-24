@@ -195,9 +195,6 @@ sudo systemctl daemon-reload
 sudo systemctl enable opentakserver
 sudo systemctl start opentakserver
 
-sudo curl -o /etc/logrotate.d/opentakserver https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/opentakserver.logrotate
-sudo sed -i "s/USERNAME/$USERNAME/g" /etc/logrotate.d/opentakserver
-
 rm -fr $INSTALLER_DIR
 deactivate
 
