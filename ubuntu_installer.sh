@@ -12,6 +12,7 @@ wget https://github.com/brian7704/OpenTAKServer-Installer/raw/master/colors.sh -
 if [ "$NAME" != "Ubuntu" ]
 then
   read -p "${YELLOW} This installer is for Ubuntu but this system is $NAME. Do you want to run anyway? [y/N] ${NC}" confirm < /dev/tty && [[ $confirm == [yY] || $confirm == [yY][eE][sS] ]] || exit 1
+  rm -fr $INSTALLER_DIR
 fi
 
 USERNAME=$(whoami)
@@ -19,6 +20,7 @@ USERNAME=$(whoami)
 if [ "$USERNAME" == 'root' ]
 then
   echo "${RED}Do no run this script as root. Instead run it as the same user that OTS will run as.${NC}"
+  rm -fr $INSTALLER_DIR
   exit 1
 fi
 
