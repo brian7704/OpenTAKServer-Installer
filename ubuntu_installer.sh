@@ -102,13 +102,25 @@ if [ "$INSTALL_MUMBLE" == 1 ]; then
 
   sudo NEEDRESTART_MODE=a apt install mumble-server zeroc-ice-all-runtime zeroc-ice-all-dev -y
 
-  sudo sed -i '/ice="tcp -h 127.0.0.1 -p 6502"/s/^#//g' /etc/mumble-server.ini
-  sudo sed -i 's/icesecretwrite/;icesecretwrite/g' /etc/mumble-server.ini
+  if [[ "$VERSION_ID" == "24.04" ]]; then
+    sudo sed -i '/ice="tcp -h 127.0.0.1 -p 6502"/s/^;//g' /etc/mumble/mumble-server.ini
+    sudo sed -i 's/icesecretwrite/;icesecretwrite/g' /etc/mumble/mumble-server.ini
+  else
+    sudo sed -i '/ice="tcp -h 127.0.0.1 -p 6502"/s/^#//g' /etc/mumble-server.ini
+    sudo sed -i 's/icesecretwrite/;icesecretwrite/g' /etc/mumble-server.ini
+  fi
+
   sudo service mumble-server restart
 
-  PASSWORD_LOG=$(sudo grep -m 1 SuperUser /var/log/mumble-server/mumble-server.log)
-  PASSWORD=($PASSWORD_LOG)
-  read -p "${GREEN}Mumble Server is now installed. The SuperUser password is ${YELLOW}${PASSWORD[-1]}${GREEN}. Press enter to continue.${NC}" < /dev/tty
+  if [[ "$VERSION_ID" == "24.04" ]]; then
+    PASSWORD_LOG=$(sudo grep -m 1 SuperUser /var/log/syslog)
+    PASSWORD=($PASSWORD_LOG)
+    read -p "${GREEN}Mumble Server is now installed. The SuperUser password is ${YELLOW}${PASSWORD[-1]}${GREEN}. Press enter to continue.${NC}" < /dev/tty
+  else
+    PASSWORD_LOG=$(sudo grep -m 1 SuperUser /var/log/mumble-server/mumble-server.log)
+    PASSWORD=($PASSWORD_LOG)
+    read -p "${GREEN}Mumble Server is now installed. The SuperUser password is ${YELLOW}${PASSWORD[-1]}${GREEN}. Press enter to continue.${NC}" < /dev/tty
+  fi
 fi
 
 echo "${GREEN}Creating certificate authority...${NC}"
