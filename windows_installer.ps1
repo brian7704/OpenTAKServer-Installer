@@ -37,6 +37,12 @@ python -m venv .venv
 .\.venv\Scripts\activate
 pip install opentakserver
 
+Write-Host "Initializing Database..." -ForegroundColor Green -BackgroundColor Black
+Set-Location -Path $DATA_DIR\.venv\lib\python3.*\site-packages\opentakserver
+python flask db upgrade
+Set-Location -Path $DATA_DIR
+Write-Host "Finished initializing database!" -ForegroundColor Green -BackgroundColor Black
+
 Write-Host "Installing MediaMTX.." -ForegroundColor Green -BackgroundColor Black
 $url = lastversion --filter '~*windows' --assets bluenviron/mediamtx --only 1.6.0
 $filename = $url.Split("/")[-1]

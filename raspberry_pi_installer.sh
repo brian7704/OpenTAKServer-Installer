@@ -40,6 +40,12 @@ source "$HOME"/.opentakserver_venv/bin/activate
 pip3 install opentakserver
 echo "${GREEN}OpenTAKServer Installed!${NC}"
 
+echo "${GREEN}Initializing Database...${NC}"
+cd "$HOME"/.opentakserver_venv/lib/python3.*/site-packages/opentakserver
+python3 flask db upgrade
+cd "$INSTALLER_DIR"
+echo "${GREEN}Finished initializing database!${NC}"
+
 INSTALL_ZEROTIER=""
 while :
 do
