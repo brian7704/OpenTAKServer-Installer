@@ -12,6 +12,8 @@ import colorama
 
 if platform.system().lower() == 'windows':
     colorama.just_fix_windows_console()
+else:
+    colorama.init()
 
 handler = colorlog.StreamHandler()
 handler.setFormatter(colorlog.ColoredFormatter('%(log_color)s[%(asctime)s] - OpenTAKServer[%(process)d] - %(module)s - %(levelname)s - %(message)s', datefmt="%Y-%m-%d %H:%M:%S"))
@@ -20,7 +22,7 @@ logger.addHandler(handler)
 
 logger.warning("This script will make modifications to your database. Please make a backup of your database before proceeding in case something goes wrong.")
 while True:
-    proceed = input(colorama.Fore.YELLOW + "Would you like to continue? [y/N]")
+    proceed = input(colorama.Fore.YELLOW + "Would you like to continue? [y/N]" + colorama.Style.RESET_ALL)
     if proceed.lower().startswith('y'):
         break
     else:
