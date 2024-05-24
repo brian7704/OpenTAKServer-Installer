@@ -22,7 +22,10 @@ logger.addHandler(handler)
 
 logger.warning("This script will make modifications to your database. Please make a backup of your database before proceeding in case something goes wrong.")
 while True:
-    proceed = input(colorama.Fore.YELLOW + "Would you like to continue? [y/N]" + colorama.Style.RESET_ALL)
+    try:
+        proceed = input(colorama.Fore.YELLOW + "Would you like to continue? [y/N]" + colorama.Style.RESET_ALL)
+    except EOFError:
+        continue
     if proceed.lower().startswith('y'):
         break
     else:
