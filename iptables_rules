@@ -2,8 +2,6 @@
 :INPUT ACCEPT [0:0]
 :FORWARD ACCEPT [0:0]
 :OUTPUT ACCEPT [11996:8975838]
--A INPUT -p udp -m udp --dport 8189 -j ACCEPT
--A INPUT -i wg0 -p tcp -m tcp --dport 10050 -j ACCEPT
 -A INPUT -p udp -m udp --dport 51820 -j ACCEPT
 -A INPUT -i lo -j ACCEPT
 -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
@@ -12,14 +10,16 @@
 -A INPUT -p udp -m udp --dport 8890 -j ACCEPT
 -A INPUT -p tcp -m tcp --dport 8889 -j ACCEPT
 -A INPUT -p tcp -m tcp --dport 8888 -j ACCEPT
+-A INPUT -p tcp -m tcp --dport 8883 -j ACCEPT
 -A INPUT -p udp -m udp --dport 8554 -j ACCEPT
 -A INPUT -p tcp -m tcp --dport 8554 -j ACCEPT
 -A INPUT -p tcp -m tcp --dport 8322 -j ACCEPT
--A INPUT -p tcp -m tcp --dport 8189 -j ACCEPT
+-A INPUT -p udp -m udp --dport 8189 -j ACCEPT
 -A INPUT -p udp -m udp --dport 8001 -j ACCEPT
 -A INPUT -p udp -m udp --dport 8000 -j ACCEPT
 -A INPUT -p tcp -m tcp --dport 1936 -j ACCEPT
 -A INPUT -p tcp -m tcp --dport 1935 -j ACCEPT
+-A INPUT -p tcp -m tcp --dport 1883 -j ACCEPT
 -A INPUT -p tcp -m tcp --dport 8089 -j ACCEPT
 -A INPUT -p tcp -m tcp --dport 8088 -j ACCEPT
 -A INPUT -p tcp -m tcp --dport 8080 -j ACCEPT
