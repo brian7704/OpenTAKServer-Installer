@@ -40,14 +40,7 @@ if platform.system().lower() == 'windows':
     logger.info("Installing unishox2-py3...")
     pip.main(["install", "https://github.com/brian7704/OpenTAKServer-Installer/raw/master/unishox2_py3-1.0.0-cp312-cp312-win_amd64.whl"])
 
-opentakserver_version = opentakserver.__version_tuple__
-major = opentakserver_version[0]
-minor = opentakserver_version[1]
-patch = opentakserver_version[2]
 
-ots_directory = os.path.dirname(os.path.realpath(opentakserver.__file__))
-logger.info("Found OpenTAKServer at {}".format(ots_directory))
-logger.info("Found OpenTAKServer version {}.{}.{}".format(major, minor, patch))
 logger.info("Upgrading OpenTAKServer...")
 # TODO: Change this once the new version is on PyPI
 pip.main(["install", "git+https://github.com/brian7704/OpenTAKServer", "-U"])
