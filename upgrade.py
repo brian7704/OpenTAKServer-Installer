@@ -38,20 +38,26 @@ patch = opentakserver_version[2]
 
 ots_directory = os.path.dirname(os.path.realpath(opentakserver.__file__))
 logger.info("Found OpenTAKServer at {}".format(ots_directory))
-
 logger.info("Found OpenTAKServer version {}.{}.{}".format(major, minor, patch))
 logger.info("Upgrading OpenTAKServer...")
-pip.main(["install", "opentakserver", "-U"])
+# TODO: Change this once the new version is on PyPI
+pip.main(["install", "git+https://github.com/brian7704/OpenTAKServer", "-U"])
 importlib.reload(opentakserver)
 
 # Flask-Migrate won't be installed yet if the old version of OpenTAKServer is <= 1.1.10 so import it here after upgrading
 # OpenTAKServer to the latest version
 import flask_migrate
+from flask_migrate import Migrate, stamp
+from opentakserver.extensions import db
+
+Migrate(app, db)
+logger.disabled = False
+logger.parent.handlers.pop()
 
 if major == 1 and minor <= 1 and patch <= 10:
     logger.info("Old version of OpenTAKServer was {}.{}.{}, stamping DB version as 4c7909c34d4e".format(major, minor, patch))
     with app.app_context():
-        flask_migrate.stamp(directory=os.path.join(ots_directory, "migrations"), revision="4c7909c34d4e")
+        stamp(directory=os.path.join(ots_directory, "migrations"), revision="4c7909c34d4e")
 
 logger.info("Upgrading DB Schema...")
 with app.app_context():
@@ -61,3 +67,5 @@ with app.app_context():
     except BaseException as e:
         logger.error("Database migration failed: {}".format(e))
         logger.error(traceback.format_exc())
+
+logger.info("The upgrade is complete. Please restart OpenTAKServer if it is running.")
