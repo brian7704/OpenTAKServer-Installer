@@ -35,6 +35,7 @@ refreshenv
 Set-Location -Path $DATA_DIR
 python -m venv .venv
 .\.venv\Scripts\activate
+pip install https://github.com/brian7704/OpenTAKServer-Installer/raw/master/unishox2_py3-1.0.0-cp312-cp312-win_amd64.whl
 pip install opentakserver
 
 Write-Host "Initializing Database..." -ForegroundColor Green -BackgroundColor Black
