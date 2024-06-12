@@ -35,7 +35,7 @@ refreshenv
 Set-Location -Path $DATA_DIR
 python -m venv .venv
 .\.venv\Scripts\activate
-pip install opentakserver
+pip install opentakserver==1.1.10
 
 Write-Host "Installing MediaMTX.." -ForegroundColor Green -BackgroundColor Black
 $url = lastversion --filter '~*windows' --assets bluenviron/mediamtx --only 1.6.0
@@ -117,7 +117,7 @@ if (-Not (Test-Path -Path c:\tools\nginx-$version\html\opentakserver))  {
     New-Item -ItemType Directory -Path c:\tools\nginx-$version\html\opentakserver
 }
 Set-Location -Path c:\tools\nginx-$version\html\opentakserver
-lastversion --assets extract brian7704/OpenTAKServer-UI
+lastversion --assets extract brian7704/OpenTAKServer-UI --only 1.1.1
 
 # Get out of the python venv
 deactivate

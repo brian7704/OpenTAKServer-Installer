@@ -37,7 +37,7 @@ sudo NEEDRESTART_MODE=a apt install curl python3 python3-pip python3-venv rabbit
 echo "${GREEN}Installing OpenTAKServer from PyPI...${NC}"
 python3 -m venv --system-site-packages ~/.opentakserver_venv
 source "$HOME"/.opentakserver_venv/bin/activate
-pip3 install opentakserver
+pip3 install opentakserver==1.1.10
 echo "${GREEN}OpenTAKServer Installed!${NC}"
 
 INSTALL_ZEROTIER=""
@@ -178,7 +178,7 @@ sudo systemctl restart nginx
 sudo mkdir -p /var/www/html/opentakserver
 sudo chmod a+rw /var/www/html/opentakserver
 cd /var/www/html/opentakserver
-lastversion --assets extract brian7704/OpenTAKServer-UI
+lastversion --assets extract brian7704/OpenTAKServer-UI --only 1.1.1
 
 cd "$INSTALLER_DIR" || exit
 
