@@ -70,7 +70,7 @@ sed -i s/SERVER_KEY_FILE/$DATA_DIR\\ca\\certs\\opentakserver\\opentakserver.nopa
 
 # Make a new service
 Write-Host "Creating a service for OpenTAKServer..." -ForegroundColor Green -BackgroundColor Black
-nssm install OpenTAKServer $DATA_DIR\.venv\Scripts\python.exe -m opentakserver.app
+nssm install OpenTAKServer $DATA_DIR\.venv\Scripts\opentakserver.exe
 nssm set OpenTAKServer ObjectName $Env:UserDomain\$Env:UserName $password
 nssm set OpenTAKServer AppStdout $DATA_DIR\service_stdout.log
 nssm set OpenTAKServer AppStderr $DATA_DIR\service_stderr.log

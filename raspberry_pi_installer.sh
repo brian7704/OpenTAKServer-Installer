@@ -203,7 +203,7 @@ After=network.target rabbitmq-server.service
 [Service]
 User=$(whoami)
 WorkingDirectory=${HOME}/ots
-ExecStart=${HOME}/.opentakserver_venv/bin/python3 -m opentakserver.app
+ExecStart=${HOME}/.opentakserver_venv/bin/opentakserver
 [Install]
 WantedBy=multi-user.target
 EOF
