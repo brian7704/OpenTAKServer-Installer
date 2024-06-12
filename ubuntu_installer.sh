@@ -30,7 +30,7 @@ wget https://github.com/brian7704/OpenTAKServer-Installer/raw/master/iconsets.sq
 echo "${GREEN}Installing packages via apt. You may be prompted for your sudo password...${NC}"
 
 sudo apt update && sudo NEEDRESTART_MODE=a apt upgrade -y
-sudo NEEDRESTART_MODE=a apt install curl python3 python3-pip python3-venv rabbitmq-server openssl nginx ffmpeg -y
+sudo NEEDRESTART_MODE=a apt install curl python3 python3-pip python3-venv rabbitmq-server openssl nginx ffmpeg libnginx-mod-stream -y
 #sudo cp $INSTALLER_DIR /etc/iptables/
 #sudo iptables-restore < /etc/iptables/rules.v4
 
@@ -178,19 +178,31 @@ sudo systemctl enable mediamtx
 sudo systemctl start mediamtx
 
 echo "${GREEN}Setting up nginx...${NC}"
+sudo echo "stream {
+        include /etc/nginx/streams-enabled/*;
+}" | tee -a /etc/nginx/nginx.conf
+
 sudo rm -f /etc/nginx/sites-enabled/*
+sudo mkdir -p /etc/nginx/streams-available
+sudo mkdir -p /etc/nginx/streams-enabled
+
+# TODO: Change this line once this branch is merged to the master branch
+sudo wget https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/DB_Migration/nginx_configs/rabbitmq -q0 /etc/nginx/streams-available
 sudo wget https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/online_installer/nginx_configs/ots_certificate_enrollment -qO /etc/nginx/sites-available/ots_certificate_enrollment
 sudo wget https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/online_installer/nginx_configs/ots_http -qO /etc/nginx/sites-available/ots_http
 sudo wget https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/online_installer/nginx_configs/ots_https -qO /etc/nginx/sites-available/ots_https
 
 sudo sed -i "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.pem~g" /etc/nginx/sites-available/ots_https
 sudo sed -i "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.pem~g" /etc/nginx/sites-available/ots_certificate_enrollment
+sudo sed -i "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.pem~g" /etc/nginx/streams-available/rabbitmq
 sudo sed -i "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.nopass.key~g" /etc/nginx/sites-available/ots_https
 sudo sed -i "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.nopass.key~g" /etc/nginx/sites-available/ots_certificate_enrollment
+sudo sed -i "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.nopass.key~g" /etc/nginx/streams-available/rabbitmq
 sudo sed -i "s~CA_CERT_FILE~${HOME}/ots/ca/ca.pem~g" /etc/nginx/sites-available/ots_https
 sudo sed -i "s~CA_CERT_FILE~${HOME}/ots/ca/ca.pem~g" /etc/nginx/sites-available/ots_certificate_enrollment
 
 sudo ln -s /etc/nginx/sites-available/ots_* /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/streams-available/* /etc/nginx/streams-enabled/
 
 sudo systemctl enable nginx
 sudo systemctl restart nginx

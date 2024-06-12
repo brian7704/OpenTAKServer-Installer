@@ -100,6 +100,12 @@ Invoke-WebRequest https://raw.githubusercontent.com/brian7704/OpenTAKServer-Inst
 Invoke-WebRequest https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/windows_nginx_configs/ots_https.conf -OutFile c:\tools\nginx-$version\conf\ots\ots_https.conf
 Invoke-WebRequest https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/windows_nginx_configs/ots_certificate_enrollment.conf -OutFile c:\tools\nginx-$version\conf\ots\ots_certificate_enrollment.conf
 
+if (-Not (Test-Path -Path c:\tools\nginx-$version\conf\ots\streams)) {
+    New-Item -ItemType Directory -Path c:\tools\nginx-$version\conf\ots\streams
+}
+# TODO: Change this url once this branch is merged with the master branch
+Invoke-WebRequest https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/DB_Migration/windows_nginx_configs/rabbitmq.conf -OutFile c:\tools\nginx-$version\conf\ots\streams\rabbitmq.conf
+
 # Configure nginx
 sed -i s/NGINX_VERSION/$version/g c:\tools\nginx-$version\conf\nginx.conf
 sed -i s/NGINX_VERSION/$version/g c:\tools\nginx-$version\conf\ots\ots_http.conf
@@ -113,6 +119,9 @@ sed -i s/CA_CERT_FILE/$DATA_DIR\\ca\\ca.pem/g c:\tools\nginx-$version\conf\ots\o
 sed -i s/SERVER_CERT_FILE/$DATA_DIR\\ca\\certs\\opentakserver\\opentakserver.pem/g c:\tools\nginx-$version\conf\ots\ots_https.conf
 sed -i s/SERVER_KEY_FILE/$DATA_DIR\\ca\\certs\\opentakserver\\opentakserver.nopass.key/g c:\tools\nginx-$version\conf\ots\ots_https.conf
 sed -i s/CA_CERT_FILE/$DATA_DIR\\ca\\ca.pem/g c:\tools\nginx-$version\conf\ots\ots_https.conf
+
+sed -i s/SERVER_CERT_FILE/$DATA_DIR\\ca\\certs\\opentakserver\\opentakserver.pem/g c:\tools\nginx-$version\conf\ots\streams\rabbitmq.conf
+sed -i s/SERVER_KEY_FILE/$DATA_DIR\\ca\\certs\\opentakserver\\opentakserver.nopass.key/g c:\tools\nginx-$version\conf\ots\streams\rabbitmq.conf
 
 Set-Location -Path $INSTALLER_DIR
 
