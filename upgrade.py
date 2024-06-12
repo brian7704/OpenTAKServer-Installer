@@ -20,6 +20,19 @@ handler.setFormatter(colorlog.ColoredFormatter('%(log_color)s[%(asctime)s] - Ope
 logger = colorlog.getLogger('ots_upgrade')
 logger.addHandler(handler)
 
+opentakserver_version = opentakserver.__version_tuple__
+major = opentakserver_version[0]
+minor = opentakserver_version[1]
+patch = opentakserver_version[2]
+
+ots_directory = os.path.dirname(os.path.realpath(opentakserver.__file__))
+logger.info(f"Found OpenTAKServer version {major}.{minor}.{patch} at {ots_directory}")
+
+if platform.system().lower() == 'windows':
+    logger.info("Installing unishox2-py3...")
+    pip.main(["install", "https://github.com/brian7704/OpenTAKServer-Installer/raw/master/unishox2_py3-1.0.0-cp312-cp312-win_amd64.whl"])
+    sys.exit()
+
 logger.warning("This script will make modifications to your database. Please make a backup of your database before proceeding in case something goes wrong.")
 while True:
     try:
