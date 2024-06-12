@@ -30,10 +30,7 @@ logger.info(f"Found OpenTAKServer version {major}.{minor}.{patch} at {ots_direct
 
 logger.warning("This script will make modifications to your database. Please make a backup of your database before proceeding in case something goes wrong.")
 while True:
-    try:
-        proceed = input(colorama.Fore.YELLOW + "Would you like to continue? [y/N]" + colorama.Style.RESET_ALL)
-    except EOFError:
-        continue
+    proceed = input(colorama.Fore.YELLOW + "Would you like to continue? [y/N]" + colorama.Style.RESET_ALL)
     if proceed.lower().startswith('y'):
         break
     else:
