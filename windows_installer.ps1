@@ -43,6 +43,11 @@ python flask db upgrade
 Set-Location -Path $DATA_DIR
 Write-Host "Finished initializing database!" -ForegroundColor Green -BackgroundColor Black
 
+Write-Host "Creating Certificate Authority..." -ForegroundColor Green -BackgroundColor Black
+Set-Location -Path $DATA_DIR
+.\.venv\bin\opentakserver.exe --create-ca
+Write-Host "Finished creating the certificate authority!" -ForegroundColor Green -BackgroundColor Black
+
 Write-Host "Installing MediaMTX.." -ForegroundColor Green -BackgroundColor Black
 $url = lastversion --filter '~*windows' --assets bluenviron/mediamtx --only 1.6.0
 $filename = $url.Split("/")[-1]
@@ -71,16 +76,6 @@ nssm set OpenTAKServer AppStdout $DATA_DIR\service_stdout.log
 nssm set OpenTAKServer AppStderr $DATA_DIR\service_stderr.log
 nssm start OpenTAKServer
 
-$tries = 0
-Write-Host "Waiting for OpenTAKServer to start and create the certificate authority..." -ForegroundColor Green -BackgroundColor Black
-Do {
-    Start-Sleep -Seconds 1
-    Write-Host "Still waiting..." -ForegroundColor Green -BackgroundColor Black
-    $global:tries++
-    if ($tries -gt 15) {
-        Write-Host "Failed to create certificate authority, exiting..." -ForegroundColor Red -BackgroundColor Black
-    }
-} while (-Not(Test-Path -Path $DATA_DIR/ca/certs/opentakserver/opentakserver.pem))
 Write-Host "Starting MediaMTX..." -ForegroundColor Green -BackgroundColor Black
 nssm start MediaMTX
 
