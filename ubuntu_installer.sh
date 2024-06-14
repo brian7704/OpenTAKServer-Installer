@@ -37,12 +37,12 @@ sudo NEEDRESTART_MODE=a apt install curl python3 python3-pip python3-venv rabbit
 echo "${GREEN} Installing OpenTAKServer from PyPI...${NC}"
 python3 -m venv --system-site-packages ~/.opentakserver_venv
 source "$HOME"/.opentakserver_venv/bin/activate
-pip3 install opentakserver==1.1.10
+pip3 install opentakserver
 echo "${GREEN}OpenTAKServer Installed!${NC}"
 
 echo "${GREEN}Initializing Database...${NC}"
 cd "$HOME"/.opentakserver_venv/lib/python3.*/site-packages/opentakserver
-python3 flask db upgrade
+opentakserver --upgrade-db
 cd "$INSTALLER_DIR"
 echo "${GREEN}Finished initializing database!${NC}"
 
@@ -210,7 +210,7 @@ sudo systemctl restart nginx
 sudo mkdir -p /var/www/html/opentakserver
 sudo chmod a+rw /var/www/html/opentakserver
 cd /var/www/html/opentakserver
-lastversion --assets extract brian7704/OpenTAKServer-UI --only 1.1.1
+lastversion --assets extract brian7704/OpenTAKServer-UI
 
 sudo tee /etc/systemd/system/opentakserver.service >/dev/null << EOF
 [Unit]
