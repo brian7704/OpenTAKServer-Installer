@@ -186,8 +186,7 @@ sudo rm -f /etc/nginx/sites-enabled/*
 sudo mkdir -p /etc/nginx/streams-available
 sudo mkdir -p /etc/nginx/streams-enabled
 
-# TODO: Change this line once this branch is merged to the master branch
-sudo wget https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/DB_Migration/nginx_configs/rabbitmq -q0 /etc/nginx/streams-available
+sudo wget https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/nginx_configs/rabbitmq -q0 /etc/nginx/streams-available
 sudo wget https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/online_installer/nginx_configs/ots_certificate_enrollment -qO /etc/nginx/sites-available/ots_certificate_enrollment
 sudo wget https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/online_installer/nginx_configs/ots_http -qO /etc/nginx/sites-available/ots_http
 sudo wget https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/online_installer/nginx_configs/ots_https -qO /etc/nginx/sites-available/ots_https
@@ -227,6 +226,13 @@ EOF
 sudo systemctl daemon-reload
 sudo systemctl enable opentakserver
 sudo systemctl start opentakserver
+
+echo "${GREEN}Configuring RabbitMQ...${NC}"
+sudo wget -q0 https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/rabbitmq.conf /etc/rabbitmq/rabbitmq.conf
+sudo rabbitmq-plugins enable rabbitmq_mqtt
+sudo rabbitmq-plugins enable rabbitmq_auth_backend_http
+sudo systemctl restart rabbitmq-server
+echo "${GREEN}Finished configuring RabbitMQ${NC}"
 
 rm -fr $INSTALLER_DIR
 deactivate

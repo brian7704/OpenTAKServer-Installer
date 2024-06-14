@@ -99,8 +99,13 @@ Invoke-WebRequest https://raw.githubusercontent.com/brian7704/OpenTAKServer-Inst
 if (-Not (Test-Path -Path c:\tools\nginx-$version\conf\ots\streams)) {
     New-Item -ItemType Directory -Path c:\tools\nginx-$version\conf\ots\streams
 }
-# TODO: Change this url once this branch is merged with the master branch
-Invoke-WebRequest https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/DB_Migration/windows_nginx_configs/rabbitmq.conf -OutFile c:\tools\nginx-$version\conf\ots\streams\rabbitmq.conf
+
+Write-Host "Configuring RabbitMQ..." -ForegroundColor Green -BackgroundColor Black
+Invoke-WebRequest https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/nginx_configs/rabbitmq -OutFile c:\tools\nginx-$version\conf\ots\streams\rabbitmq.conf
+Set-Location -Path "C:\Program Files\RabbitMQ*\rabbitmq_server*\sbin"
+.\rabbitmq-plugins.bat enable rabbitmq_mqtt
+.\rabbitmq-plugins.bat enable rabbitmq_auth_backend_http
+nssm restart rabbitmq
 
 # Configure nginx
 sed -i s/NGINX_VERSION/$version/g c:\tools\nginx-$version\conf\nginx.conf

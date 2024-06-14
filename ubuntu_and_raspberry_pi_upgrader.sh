@@ -44,8 +44,7 @@ LATEST_PATCH=${VERSION_ARRAY[2]}
 
 if [[ "$LATEST_MAJOR" -ne "$INSTALLED_MAJOR" || "$LATEST_MINOR" -ne "$INSTALLED_MINOR" || "$LATEST_PATCH" -ne "$INSTALLED_PATCH" ]]; then
   echo "${GREEN}Upgrading OpenTAKServer to version ${LATEST_OTS_VERSION}${NC}"
-  # TODO: Change this link once this branch is merged with master
-  ~/.opentakserver_venv/bin/pip install git+https://github.com/brian7704/OpenTAKServer -U
+  ~/.opentakserver_venv/bin/pip install opentakserver -U
 
   echo "${GREEN}Upgrading database schema...${NC}"
   ~/.opentakserver_venv/bin/opentakserver --upgrade-db
@@ -68,8 +67,7 @@ if [[ $? -ne 0 ]]; then
   sudo mkdir -p /etc/nginx/streams-available
   sudo mkdir -p /etc/nginx/streams-enabled
   cd /etc/nginx/streams-available
-  # TODO: Change this link once this branch is merged with master
-  sudo wget https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/DB_Migration/nginx_configs/rabbitmq
+  sudo wget https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/nginx_configs/rabbitmq
   sudo sed -i "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.pem~g" rabbitmq
   sudo sed -i "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.nopass.key~g" rabbitmq
   sudo ln -s /etc/nginx/streams-available/rabbitmq /etc/nginx/streams-enabled/rabbitmq
@@ -87,8 +85,8 @@ sudo ls /etc/rabbitmq/rabbitmq.conf &> /dev/null
 if [[ $? -ne 0 ]]; then
   echo "${GREEN}Enabling MQTT support in RabbitMQ${NC}"
   sudo rabbitmq-plugins enable rabbitmq_mqtt
-  # TODO: Change this link once this branch is merged with master
-  sudo wget https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/DB_Migration/rabbitmq.conf -O /etc/rabbitmq/rabbitmq.conf
+  sudo rabbitmq-plugins enable rabbitmq_auth_backend_http
+  sudo wget https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/rabbitmq.conf -O /etc/rabbitmq/rabbitmq.conf
   sudo systemctl restart rabbitmq-server
 fi
 
