@@ -35,7 +35,19 @@ refreshenv
 Set-Location -Path $DATA_DIR
 python -m venv .venv
 .\.venv\Scripts\activate
-pip install opentakserver==1.1.10
+pip install https://github.com/brian7704/OpenTAKServer-Installer/raw/master/unishox2_py3-1.0.0-cp312-cp312-win_amd64.whl
+pip install opentakserver
+
+Write-Host "Initializing Database..." -ForegroundColor Green -BackgroundColor Black
+Set-Location -Path $DATA_DIR\.venv\lib\python3.*\site-packages\opentakserver
+python flask db upgrade
+Set-Location -Path $DATA_DIR
+Write-Host "Finished initializing database!" -ForegroundColor Green -BackgroundColor Black
+
+Write-Host "Creating Certificate Authority..." -ForegroundColor Green -BackgroundColor Black
+Set-Location -Path $DATA_DIR
+.\.venv\bin\opentakserver.exe --create-ca
+Write-Host "Finished creating the certificate authority!" -ForegroundColor Green -BackgroundColor Black
 
 Write-Host "Installing MediaMTX.." -ForegroundColor Green -BackgroundColor Black
 $url = lastversion --filter '~*windows' --assets bluenviron/mediamtx --only 1.6.0
@@ -59,22 +71,12 @@ sed -i s/SERVER_KEY_FILE/$DATA_DIR\\ca\\certs\\opentakserver\\opentakserver.nopa
 
 # Make a new service
 Write-Host "Creating a service for OpenTAKServer..." -ForegroundColor Green -BackgroundColor Black
-nssm install OpenTAKServer $DATA_DIR\.venv\Scripts\python.exe -m opentakserver.app
+nssm install OpenTAKServer $DATA_DIR\.venv\Scripts\opentakserver.exe
 nssm set OpenTAKServer ObjectName $Env:UserDomain\$Env:UserName $password
 nssm set OpenTAKServer AppStdout $DATA_DIR\service_stdout.log
 nssm set OpenTAKServer AppStderr $DATA_DIR\service_stderr.log
 nssm start OpenTAKServer
 
-$tries = 0
-Write-Host "Waiting for OpenTAKServer to start and create the certificate authority..." -ForegroundColor Green -BackgroundColor Black
-Do {
-    Start-Sleep -Seconds 1
-    Write-Host "Still waiting..." -ForegroundColor Green -BackgroundColor Black
-    $global:tries++
-    if ($tries -gt 15) {
-        Write-Host "Failed to create certificate authority, exiting..." -ForegroundColor Red -BackgroundColor Black
-    }
-} while (-Not(Test-Path -Path $DATA_DIR/ca/certs/opentakserver/opentakserver.pem))
 Write-Host "Starting MediaMTX..." -ForegroundColor Green -BackgroundColor Black
 nssm start MediaMTX
 
@@ -94,6 +96,12 @@ Invoke-WebRequest https://raw.githubusercontent.com/brian7704/OpenTAKServer-Inst
 Invoke-WebRequest https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/windows_nginx_configs/ots_https.conf -OutFile c:\tools\nginx-$version\conf\ots\ots_https.conf
 Invoke-WebRequest https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/windows_nginx_configs/ots_certificate_enrollment.conf -OutFile c:\tools\nginx-$version\conf\ots\ots_certificate_enrollment.conf
 
+if (-Not (Test-Path -Path c:\tools\nginx-$version\conf\ots\streams)) {
+    New-Item -ItemType Directory -Path c:\tools\nginx-$version\conf\ots\streams
+}
+# TODO: Change this url once this branch is merged with the master branch
+Invoke-WebRequest https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/DB_Migration/windows_nginx_configs/rabbitmq.conf -OutFile c:\tools\nginx-$version\conf\ots\streams\rabbitmq.conf
+
 # Configure nginx
 sed -i s/NGINX_VERSION/$version/g c:\tools\nginx-$version\conf\nginx.conf
 sed -i s/NGINX_VERSION/$version/g c:\tools\nginx-$version\conf\ots\ots_http.conf
@@ -108,6 +116,9 @@ sed -i s/SERVER_CERT_FILE/$DATA_DIR\\ca\\certs\\opentakserver\\opentakserver.pem
 sed -i s/SERVER_KEY_FILE/$DATA_DIR\\ca\\certs\\opentakserver\\opentakserver.nopass.key/g c:\tools\nginx-$version\conf\ots\ots_https.conf
 sed -i s/CA_CERT_FILE/$DATA_DIR\\ca\\ca.pem/g c:\tools\nginx-$version\conf\ots\ots_https.conf
 
+sed -i s/SERVER_CERT_FILE/$DATA_DIR\\ca\\certs\\opentakserver\\opentakserver.pem/g c:\tools\nginx-$version\conf\ots\streams\rabbitmq.conf
+sed -i s/SERVER_KEY_FILE/$DATA_DIR\\ca\\certs\\opentakserver\\opentakserver.nopass.key/g c:\tools\nginx-$version\conf\ots\streams\rabbitmq.conf
+
 Set-Location -Path $INSTALLER_DIR
 
 nssm restart nginx
@@ -117,7 +128,7 @@ if (-Not (Test-Path -Path c:\tools\nginx-$version\html\opentakserver))  {
     New-Item -ItemType Directory -Path c:\tools\nginx-$version\html\opentakserver
 }
 Set-Location -Path c:\tools\nginx-$version\html\opentakserver
-lastversion --assets extract brian7704/OpenTAKServer-UI --only 1.1.1
+lastversion --assets extract brian7704/OpenTAKServer-UI
 
 # Get out of the python venv
 deactivate
