@@ -186,7 +186,7 @@ sudo rm -f /etc/nginx/sites-enabled/*
 sudo mkdir -p /etc/nginx/streams-available
 sudo mkdir -p /etc/nginx/streams-enabled
 
-sudo wget https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/nginx_configs/rabbitmq -q0 /etc/nginx/streams-available
+sudo wget https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/nginx_configs/rabbitmq -qO /etc/nginx/streams-available
 sudo wget https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/online_installer/nginx_configs/ots_certificate_enrollment -qO /etc/nginx/sites-available/ots_certificate_enrollment
 sudo wget https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/online_installer/nginx_configs/ots_http -qO /etc/nginx/sites-available/ots_http
 sudo wget https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/online_installer/nginx_configs/ots_https -qO /etc/nginx/sites-available/ots_https
@@ -228,9 +228,8 @@ sudo systemctl enable opentakserver
 sudo systemctl start opentakserver
 
 echo "${GREEN}Configuring RabbitMQ...${NC}"
-sudo wget -q0 https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/rabbitmq.conf /etc/rabbitmq/rabbitmq.conf
-sudo rabbitmq-plugins enable rabbitmq_mqtt
-sudo rabbitmq-plugins enable rabbitmq_auth_backend_http
+sudo wget -qO https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/rabbitmq.conf /etc/rabbitmq/rabbitmq.conf
+sudo rabbitmq-plugins enable rabbitmq_mqtt rabbitmq_auth_backend_http
 sudo systemctl restart rabbitmq-server
 echo "${GREEN}Finished configuring RabbitMQ${NC}"
 
