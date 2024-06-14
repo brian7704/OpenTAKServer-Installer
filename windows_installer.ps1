@@ -39,14 +39,13 @@ pip install https://github.com/brian7704/OpenTAKServer-Installer/raw/master/unis
 pip install opentakserver
 
 Write-Host "Initializing Database..." -ForegroundColor Green -BackgroundColor Black
-Set-Location -Path $DATA_DIR\.venv\lib\python3.*\site-packages\opentakserver
 opentakserver.exe --upgrade-db
 Set-Location -Path $DATA_DIR
 Write-Host "Finished initializing database!" -ForegroundColor Green -BackgroundColor Black
 
 Write-Host "Creating Certificate Authority..." -ForegroundColor Green -BackgroundColor Black
 Set-Location -Path $DATA_DIR
-.\.venv\bin\opentakserver.exe --create-ca
+opentakserver.exe --create-ca
 Write-Host "Finished creating the certificate authority!" -ForegroundColor Green -BackgroundColor Black
 
 Write-Host "Installing MediaMTX.." -ForegroundColor Green -BackgroundColor Black
