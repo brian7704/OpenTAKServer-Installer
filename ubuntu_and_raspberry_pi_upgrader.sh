@@ -85,9 +85,10 @@ sudo ls /etc/rabbitmq/rabbitmq.conf &> /dev/null
 if [[ $? -ne 0 ]]; then
   echo "${GREEN}Enabling MQTT support in RabbitMQ${NC}"
   sudo wget https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/rabbitmq.conf -O /etc/rabbitmq/rabbitmq.conf
-  sudo rabbitmq-plugins enable rabbitmq_mqtt rabbitmq_auth_backend_http
-  sudo systemctl restart rabbitmq-server
-fi
-
-rm -fr "$INSTALLER_DIR"
+  # The following lines all end in "; \" because rabbitmq-plugins stops the script, even when it's successful
+  # Adding "; \" is a janky fix to make the rest of the script work
+  sudo rabbitmq-plugins enable rabbitmq_mqtt rabbitmq_auth_backend_http ; \
+  sudo systemctl restart rabbitmq-server ; \
+fi ; \
+rm -fr "$INSTALLER_DIR" ; \
 echo "${GREEN}The update is complete!${NC}"
