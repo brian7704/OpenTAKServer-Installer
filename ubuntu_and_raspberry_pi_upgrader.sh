@@ -84,9 +84,8 @@ fi
 sudo ls /etc/rabbitmq/rabbitmq.conf &> /dev/null
 if [[ $? -ne 0 ]]; then
   echo "${GREEN}Enabling MQTT support in RabbitMQ${NC}"
-  sudo rabbitmq-plugins enable rabbitmq_mqtt
-  sudo rabbitmq-plugins enable rabbitmq_auth_backend_http
   sudo wget https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/rabbitmq.conf -O /etc/rabbitmq/rabbitmq.conf
+  sudo rabbitmq-plugins enable rabbitmq_mqtt rabbitmq_auth_backend_http
   sudo systemctl restart rabbitmq-server
 fi
 
