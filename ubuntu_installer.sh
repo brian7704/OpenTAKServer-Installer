@@ -177,7 +177,7 @@ sudo systemctl daemon-reload
 sudo systemctl enable mediamtx
 sudo systemctl start mediamtx
 
-sudo grep "stream {" /etc/nginx.conf &> /dev/null
+sudo grep "stream {" /etc/nginx/nginx.conf &> /dev/null
 if [[ $? -ne 0 ]]; then
   echo "${GREEN}Setting up nginx...${NC}"
   sudo echo "
