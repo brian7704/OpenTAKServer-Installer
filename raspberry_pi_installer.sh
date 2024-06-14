@@ -221,11 +221,11 @@ sudo systemctl start opentakserver
 
 echo "${GREEN}Configuring RabbitMQ...${NC}"
 sudo wget https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/rabbitmq.conf -qO /etc/rabbitmq/rabbitmq.conf
-sudo rabbitmq-plugins enable rabbitmq_mqtt rabbitmq_auth_backend_http
-sudo systemctl restart rabbitmq-server
-echo "${GREEN}Finished configuring RabbitMQ${NC}"
-
-rm -fr $INSTALLER_DIR
-deactivate
-
-echo "${GREEN}Setup is complete and OpenTAKServer is running. ${NC}"
+# The following lines all end in "; \" because rabbitmq-plugins stops the script, even when it's successful
+# Added "; \" is a janky fix to make the rest of the script work
+sudo rabbitmq-plugins enable rabbitmq_mqtt rabbitmq_auth_backend_http ; \
+sudo systemctl restart rabbitmq-server ; \
+echo "${GREEN}Finished configuring RabbitMQ${NC}" ; \
+rm -fr $INSTALLER_DIR ; \
+deactivate ; \
+echo "${GREEN}Setup is complete and OpenTAKServer is running. ${NC}" ; \
