@@ -201,7 +201,7 @@ sudo sed -i "s~CA_CERT_FILE~${HOME}/ots/ca/ca.pem~g" /etc/nginx/sites-available/
 sudo sed -i "s~CA_CERT_FILE~${HOME}/ots/ca/ca.pem~g" /etc/nginx/sites-available/ots_certificate_enrollment
 
 sudo ln -s /etc/nginx/sites-available/ots_* /etc/nginx/sites-enabled/
-sudo ln -s /etc/nginx/streams-available/* /etc/nginx/streams-enabled/
+sudo ln -s /etc/nginx/streams-available/rabbitmq /etc/nginx/streams-enabled/
 
 sudo systemctl enable nginx
 sudo systemctl restart nginx
