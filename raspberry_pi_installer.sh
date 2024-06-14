@@ -163,10 +163,14 @@ sudo systemctl daemon-reload
 sudo systemctl enable mediamtx
 sudo systemctl start mediamtx
 
-echo "${GREEN}Setting up nginx...${NC}"
-sudo echo "stream {
+sudo grep "stream {" /etc/nginx.conf
+if [[ $? -ne 0 ]]; then
+  echo "${GREEN}Setting up nginx...${NC}"
+  sudo echo "
+stream {
         include /etc/nginx/streams-enabled/*;
 }" | sudo tee -a /etc/nginx/nginx.conf
+fi
 
 sudo rm -f /etc/nginx/sites-enabled/*
 sudo mkdir -p /etc/nginx/streams-available
