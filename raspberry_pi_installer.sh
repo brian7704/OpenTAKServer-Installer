@@ -211,6 +211,8 @@ After=network.target rabbitmq-server.service
 User=$(whoami)
 WorkingDirectory=${HOME}/ots
 ExecStart=${HOME}/.opentakserver_venv/bin/opentakserver
+Restart=on-failure
+RestartSec=5s
 [Install]
 WantedBy=multi-user.target
 EOF
