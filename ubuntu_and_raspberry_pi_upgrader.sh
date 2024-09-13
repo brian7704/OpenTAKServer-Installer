@@ -1,5 +1,51 @@
 #!/bin/bash
 
+SOPT='h'
+LOPT='bleeding-edge,help'
+OPTS=$(getopt -q -a \
+    --options ${SOPT} \
+    --longoptions ${LOPT} \
+    --name "$(basename "$0")" \
+    -- "$@"
+)
+
+if [[ $? -gt 0 ]]; then
+    exit 2
+fi
+
+show_help () {
+    echo "usage:  $BASH_SOURCE"
+    echo "                     -h --help - Print help and exit"
+    echo "                     --bleeding-edge - Upgrade to the non-production ready bleeding edge version"
+}
+
+BLEEDING_EDGE=0
+
+eval set -- "$OPTS"
+
+while [[ $# -gt 0 ]]; do
+    case ${1} in
+        -h)
+                show_help
+                exit 0
+                ;;
+        --help)
+                show_help
+                exit 0
+                ;;
+        --bleeding-edge)
+                BLEEDING_EDGE=1
+                ;;
+        --)
+                ;;
+        -)
+                ;;
+        *)
+                ;;
+    esac
+    shift
+done
+
 INSTALLER_DIR=/tmp/ots_installer
 mkdir -p $INSTALLER_DIR
 cd $INSTALLER_DIR
@@ -7,11 +53,17 @@ cd $INSTALLER_DIR
 wget https://github.com/brian7704/OpenTAKServer-Installer/raw/master/colors.sh -qO "$INSTALLER_DIR"/colors.sh
 . "$INSTALLER_DIR"/colors.sh
 
+if [[ "$BLEEDING_EDGE" -gt 0 ]]; then
+  echo "${YELLOW}"-------------------------- !!!!WARNING!!!!! -------------------------------------------------""
+  echo "This will upgrade to the bleeding edge version of OpenTAKServer. DO NOT DO THIS ON PRODUCTION SERVERS!"
+  read -p "Do you want to upgrade anyway? [y/N] ${NC}" confirm < /dev/tty && [[ $confirm == [yY] || $confirm == [yY][eE][sS] ]] || exit 1
+fi
+
 . /etc/os-release
 
 if [ "$NAME" != "Ubuntu" ] && [ "$NAME" != "Raspbian GNU/Linux" ] && [ "$NAME" != "Debian GNU/Linux" ]
 then
-  read -p "${YELLOW} This updater is for Ubuntu but this system is $NAME. Do you want to run anyway? [y/N] ${NC}" confirm < /dev/tty && [[ $confirm == [yY] || $confirm == [yY][eE][sS] ]] || exit 1
+  read -p "${YELLOW} This updater is for Ubuntu and Rapsberry Pi but this system is $NAME. Do you want to run anyway? [y/N] ${NC}" confirm < /dev/tty && [[ $confirm == [yY] || $confirm == [yY][eE][sS] ]] || exit 1
   rm -fr $INSTALLER_DIR
 fi
 
@@ -42,7 +94,23 @@ LATEST_MAJOR=${VERSION_ARRAY[0]}
 LATEST_MINOR=${VERSION_ARRAY[1]}
 LATEST_PATCH=${VERSION_ARRAY[2]}
 
-if [[ "$LATEST_MAJOR" -ne "$INSTALLED_MAJOR" || "$LATEST_MINOR" -ne "$INSTALLED_MINOR" || "$LATEST_PATCH" -ne "$INSTALLED_PATCH" ]]; then
+if [[ "$BLEEDING_EDGE" -eq 1 ]]; then
+  echo "${GREEN}Installing OpenTAKServer from git HEAD...${NC}"
+  ~/.opentakserver_venv/bin/pip install git+https://github.com/brian7704/OpenTAKServer.git
+
+  echo "${GREEN}Upgrading database schema...${NC}"
+  cd ~/.opentakserver_venv/lib/python3.1*/site-packages/opentakserver
+  ~/.opentakserver_venv/bin/flask db upgrade
+
+  echo "${GREEN}Upgrading UI...${NC}"
+  rm -fr /var/www/html/opentakserver/*
+  cd /var/www/html/opentakserver/
+  ~/.opentakserver_venv/bin/lastversion --pre --assets extract brian7704/OpenTAKServer-UI
+
+  echo "${GREEN}Restarting the OpenTAKServer service. Please enter your sudo password if prompted${NC}"
+  sudo systemctl restart opentakserver
+
+elif [[ "$LATEST_MAJOR" -ne "$INSTALLED_MAJOR" || "$LATEST_MINOR" -ne "$INSTALLED_MINOR" || "$LATEST_PATCH" -ne "$INSTALLED_PATCH" ]]; then
   echo "${GREEN}Upgrading OpenTAKServer to version ${LATEST_OTS_VERSION}${NC}"
   ~/.opentakserver_venv/bin/pip install opentakserver -U
 
