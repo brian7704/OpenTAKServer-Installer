@@ -115,7 +115,7 @@ elif [[ "$LATEST_MAJOR" -ne "$INSTALLED_MAJOR" || "$LATEST_MINOR" -ne "$INSTALLE
   ~/.opentakserver_venv/bin/pip install opentakserver -U
 
   echo "${GREEN}Upgrading database schema...${NC}"
-  ~/.opentakserver_venv/bin/opentakserver --upgrade-db
+  ~/.opentakserver_venv/bin/flask db upgrade
 
   echo "${GREEN}Upgrading UI...${NC}"
   rm -fr /var/www/html/opentakserver/*
@@ -150,6 +150,7 @@ if [[ MEDIAMTX_VERSION -ne NEWEST_MEDIAMTX_VERSION ]]; then
 
   tar -xf ./*.tar.gz
   cp mediamtx.yml.bak mediamtx.yml
+  echo "${GREEN}Restarting the MediaMTX service. Please enter your sudo password if prompted${NC}"
   sudo systemctl restart mediamtx
 fi
 
@@ -179,6 +180,7 @@ fi
 # This is required for the plugin update server functionality to work
 API=$(sudo grep "location /api" /etc/nginx/sites-enabled/ots_https | wc -l)
 if [[ $API -eq 1 ]]; then
+  echo "${GREEN}Configuring Nginx. Please enter your sudo password if prompted${NC}"
   sudo sed -i "s~\# listen \[::\]:8443 ssl ipv6only=on;~location /api { \n\
         proxy_pass http://127.0.0.1:8081; \n\
         proxy_http_version 1.1; \n\
@@ -186,6 +188,7 @@ if [[ $API -eq 1 ]]; then
         proxy_set_header X-Forwarded-For \$remote_addr; \n\
         proxy_set_header X-Forwarded-Proto \$scheme; \n\
 }~g" /etc/nginx/sites-enabled/ots_https
+  sudo systemctl restart nginx
 fi
 
 # Check if MQTT is enabled in RabbitMQ

@@ -42,7 +42,7 @@ echo "${GREEN}OpenTAKServer Installed!${NC}"
 
 echo "${GREEN}Initializing Database...${NC}"
 cd "$HOME"/.opentakserver_venv/lib/python3.*/site-packages/opentakserver
-opentakserver --upgrade-db
+flask db upgrade
 cd "$INSTALLER_DIR"
 echo "${GREEN}Finished initializing database!${NC}"
 
