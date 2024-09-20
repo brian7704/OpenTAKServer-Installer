@@ -141,17 +141,18 @@ if [ "$MEDIAMTX_VERSION" != "$NEWEST_MEDIAMTX_VERSION" ]; then
   ARCH=$(uname -m)
   KERNEL_BITS=$(getconf LONG_BIT)
   if [ "$ARCH" == "x86_64" ]; then
-    lastversion --filter '~*linux_amd64' --assets download bluenviron/mediamtx
+    ~/.opentakserver_venv/bin/lastversion --filter '~*linux_amd64' --assets download bluenviron/mediamtx
   elif [ "$KERNEL_BITS" == 32 ]; then
-    lastversion --filter '~*linux_armv7' --assets download bluenviron/mediamtx
+    ~/.opentakserver_venv/bin/lastversion --filter '~*linux_armv7' --assets download bluenviron/mediamtx
   elif [ "$KERNEL_BITS" == 64 ]; then
-    lastversion --filter '~*linux_arm64v8' --assets download bluenviron/mediamtx
+    ~/.opentakserver_venv/bin/lastversion --filter '~*linux_arm64v8' --assets download bluenviron/mediamtx
   fi
 
   tar -xf ./*.tar.gz
   cp mediamtx.yml.bak mediamtx.yml
   echo "${GREEN}Restarting the MediaMTX service. Please enter your sudo password if prompted${NC}"
   sudo systemctl restart mediamtx
+  cd "$INSTALLER_DIR"
 fi
 
 # Check if nginx's stream module is enabled
