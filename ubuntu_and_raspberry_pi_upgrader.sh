@@ -54,7 +54,7 @@ wget https://github.com/brian7704/OpenTAKServer-Installer/raw/master/colors.sh -
 . "$INSTALLER_DIR"/colors.sh
 
 if [[ "$BLEEDING_EDGE" -gt 0 ]]; then
-  echo "${YELLOW}"-------------------------- !!!!WARNING!!!!! -------------------------------------------------""
+  echo "${YELLOW}------------------------------------------!!! WARNING !!!---------------------------------------------"
   echo "This will upgrade to the bleeding edge version of OpenTAKServer. DO NOT DO THIS ON PRODUCTION SERVERS!"
   read -p "Do you want to upgrade anyway? [y/N] ${NC}" confirm < /dev/tty && [[ $confirm == [yY] || $confirm == [yY][eE][sS] ]] || exit 1
 fi
@@ -146,6 +146,19 @@ stream {
   " | sudo tee -a /etc/nginx/nginx.conf
   sudo systemctl restart nginx
   cd "$INSTALLER_DIR"
+fi
+
+# Check if "location /api" is in the server block for port 8443
+# This is required for the plugin update server functionality to work
+API=$(sudo grep "location /api" /etc/nginx/sites-enabled/ots_https | wc -l)
+if [[ $API -eq 1 ]]; then
+  sudo sed -i "s~\# listen \[::\]:8443 ssl ipv6only=on;~location /api { \n\
+        proxy_pass http://127.0.0.1:8081; \n\
+        proxy_http_version 1.1; \n\
+        proxy_set_header Host \$host:8443; \n\
+        proxy_set_header X-Forwarded-For \$remote_addr; \n\
+        proxy_set_header X-Forwarded-Proto \$scheme; \n\
+}~g" /etc/nginx/sites-enabled/ots_https
 fi
 
 # Check if MQTT is enabled in RabbitMQ
