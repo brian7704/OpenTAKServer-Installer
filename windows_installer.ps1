@@ -49,7 +49,7 @@ opentakserver.exe --create-ca
 Write-Host "Finished creating the certificate authority!" -ForegroundColor Green -BackgroundColor Black
 
 Write-Host "Installing MediaMTX.." -ForegroundColor Green -BackgroundColor Black
-$url = lastversion --filter '~*windows' --assets bluenviron/mediamtx --only 1.6.0
+$url = lastversion --filter '~*windows' --assets bluenviron/mediamtx
 $filename = $url.Split("/")[-1]
 lastversion --filter '~*windows' -o $DATA_DIR\mediamtx\$filename --assets download bluenviron/mediamtx
 Set-Location $DATA_DIR\mediamtx

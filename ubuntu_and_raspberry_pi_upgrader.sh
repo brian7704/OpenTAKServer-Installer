@@ -126,6 +126,33 @@ elif [[ "$LATEST_MAJOR" -ne "$INSTALLED_MAJOR" || "$LATEST_MINOR" -ne "$INSTALLE
   sudo systemctl restart opentakserver
 fi
 
+# Upgrade MediaMTX
+MEDIAMTX_VERSION=$(~/ots/mediamtx/mediamtx --version)
+MEDIAMTX_VERSION="${MEDIAMTX_VERSION//v}"
+NEWEST_MEDIAMTX_VERSION=$(~/.opentakserver_venv/bin/lastversion bluenviron/mediamtx)
+
+if [[ MEDIAMTX_VERSION -ne NEWEST_MEDIAMTX_VERSION ]]; then
+  echo "${GREEN}Upgrading MediaMTX from version ${MEDIAMTX_VERSION} to ${NEWEST_MEDIAMTX_VERSION}...${NC}"
+  cd ~/ots/mediamtx
+  mv mediamtx.yml mediamtx.yml.bak
+  mv mediamtx mediamtx_"$MEDIAMTX_VERSION"
+  rm mediamtx*.tar.gz
+
+  ARCH=$(uname -m)
+  KERNEL_BITS=$(getconf LONG_BIT)
+  if [ "$ARCH" == "x86_64" ]; then
+    lastversion --filter '~*linux_amd64' --assets download bluenviron/mediamtx
+  elif [ "$KERNEL_BITS" == 32 ]; then
+    lastversion --filter '~*linux_armv7' --assets download bluenviron/mediamtx
+  elif [ "$KERNEL_BITS" == 64 ]; then
+    lastversion --filter '~*linux_arm64v8' --assets download bluenviron/mediamtx
+  fi
+
+  tar -xf ./*.tar.gz
+  cp mediamtx.yml.bak mediamtx.yml
+  sudo systemctl restart mediamtx
+fi
+
 # Check if nginx's stream module is enabled
 echo "${GREEN}Checking nginx config. Please enter your sudo password if prompted${NC}"
 sudo grep "stream {" /etc/nginx/nginx.conf &> /dev/null
