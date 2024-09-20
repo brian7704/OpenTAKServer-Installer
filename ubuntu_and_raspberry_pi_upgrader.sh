@@ -131,7 +131,7 @@ MEDIAMTX_VERSION=$(~/ots/mediamtx/mediamtx --version)
 MEDIAMTX_VERSION="${MEDIAMTX_VERSION//v}"
 NEWEST_MEDIAMTX_VERSION=$(~/.opentakserver_venv/bin/lastversion bluenviron/mediamtx)
 
-if [[ MEDIAMTX_VERSION -ne NEWEST_MEDIAMTX_VERSION ]]; then
+if [[ $MEDIAMTX_VERSION -ne $NEWEST_MEDIAMTX_VERSION ]]; then
   echo "${GREEN}Upgrading MediaMTX from version ${MEDIAMTX_VERSION} to ${NEWEST_MEDIAMTX_VERSION}...${NC}"
   cd ~/ots/mediamtx
   mv mediamtx.yml mediamtx.yml.bak
