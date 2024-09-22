@@ -230,4 +230,4 @@ sudo systemctl restart rabbitmq-server ; \
 echo "${GREEN}Finished configuring RabbitMQ${NC}" ; \
 rm -fr $INSTALLER_DIR ; \
 deactivate ; \
-echo "${GREEN}Setup is complete and OpenTAKServer is running. ${NC}" ; \
+echo "${GREEN}Setup is complete and OpenTAKServer is running. You can access the Web UI at https://$(hostname -I)${NC}"
