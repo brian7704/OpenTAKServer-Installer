@@ -59,6 +59,12 @@ sudo dnf config-manager --set-enabled crb
 sudo dnf install --nogpgcheck https://mirrors.rpmfusion.org/free/el/rpmfusion-free-release-$(rpm -E %rhel).noarch.rpm -y
 sudo dnf install ffmpeg ffmpeg-devel -y
 
+# Install signing keys for the RabbitMQ repos
+sudo rpm --import 'https://github.com/rabbitmq/signing-keys/releases/download/3.0/rabbitmq-release-signing-key.asc'
+sudo rpm --import 'https://github.com/rabbitmq/signing-keys/releases/download/3.0/cloudsmith.rabbitmq-erlang.E495BB49CC4BBE5B.key'
+sudo rpm --import 'https://github.com/rabbitmq/signing-keys/releases/download/3.0/cloudsmith.rabbitmq-server.9F4587F226208342.key'
+
+
 sudo tee /etc/yum.repos.d/rabbitmq.repo >/dev/null << EOF
 ##
 ## Zero dependency Erlang RPM
