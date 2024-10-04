@@ -89,15 +89,18 @@ $version = $pwd.Path.Split("-")[-1]
 if (-Not(Test-Path -Path c:\tools\nginx-$version\conf\ots)) {
     New-Item -ItemType Directory -Path c:\tools\nginx-$version\conf\ots
 }
+
+if (-Not (Test-Path -Path c:\tools\nginx-$version\conf\ots\streams)) {
+    New-Item -ItemType Directory -Path c:\tools\nginx-$version\conf\ots\streams
+}
+
 Invoke-WebRequest https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/windows_nginx_configs/nginx.conf -OutFile c:\tools\nginx-$version\conf\nginx.conf
 Invoke-WebRequest https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/windows_nginx_configs/proxy_params -OutFile c:\tools\nginx-$version\conf\proxy_params
 Invoke-WebRequest https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/windows_nginx_configs/ots_http.conf -OutFile c:\tools\nginx-$version\conf\ots\ots_http.conf
 Invoke-WebRequest https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/windows_nginx_configs/ots_https.conf -OutFile c:\tools\nginx-$version\conf\ots\ots_https.conf
 Invoke-WebRequest https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/windows_nginx_configs/ots_certificate_enrollment.conf -OutFile c:\tools\nginx-$version\conf\ots\ots_certificate_enrollment.conf
-
-if (-Not (Test-Path -Path c:\tools\nginx-$version\conf\ots\streams)) {
-    New-Item -ItemType Directory -Path c:\tools\nginx-$version\conf\ots\streams
-}
+Invoke-WebRequest https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/windows_nginx_configs/ots_certificate_enrollment.conf -OutFile c:\tools\nginx-$version\conf\ots\ots_certificate_enrollment.conf
+Invoke-WebRequest https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/refs/heads/master/windows_nginx_configs/mediamtx.conf -OutFile c:\tools\nginx-$version\conf\ots\mediamtx.conf
 
 Write-Host "Configuring RabbitMQ..." -ForegroundColor Green -BackgroundColor Black
 Invoke-WebRequest https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/nginx_configs/rabbitmq -OutFile c:\tools\nginx-$version\conf\ots\streams\rabbitmq.conf
@@ -122,6 +125,9 @@ sed -i s/CA_CERT_FILE/$DATA_DIR\\ca\\ca.pem/g c:\tools\nginx-$version\conf\ots\o
 
 sed -i s/SERVER_CERT_FILE/$DATA_DIR\\ca\\certs\\opentakserver\\opentakserver.pem/g c:\tools\nginx-$version\conf\ots\streams\rabbitmq.conf
 sed -i s/SERVER_KEY_FILE/$DATA_DIR\\ca\\certs\\opentakserver\\opentakserver.nopass.key/g c:\tools\nginx-$version\conf\ots\streams\rabbitmq.conf
+
+sed -i s/SERVER_CERT_FILE/$DATA_DIR\\ca\\certs\\opentakserver\\opentakserver.pem/g c:\tools\nginx-$version\conf\ots\streams\mediamtx.conf
+sed -i s/SERVER_KEY_FILE/$DATA_DIR\\ca\\certs\\opentakserver\\opentakserver.nopass.key/g c:\tools\nginx-$version\conf\ots\streams\mediamtx.conf
 
 Set-Location -Path $INSTALLER_DIR
 

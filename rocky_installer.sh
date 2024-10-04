@@ -332,6 +332,7 @@ sudo mkdir -p /etc/nginx/streams-available
 sudo mkdir -p /etc/nginx/streams-enabled
 
 sudo curl -L -s -o /etc/nginx/streams-available/rabbitmq https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/nginx_configs/rabbitmq
+sudo curl -L -s -o /etc/nginx/streams-available/mediamtx https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/refs/heads/master/nginx_configs/mediamtx
 sudo curl -L -s -o /etc/nginx/conf.d/ots_certificate_enrollment.conf https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/refs/heads/master/nginx_configs/ots_certificate_enrollment
 sudo curl -L -s -o /etc/nginx/conf.d/ots_http.conf https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/refs/heads/master/nginx_configs/ots_http
 sudo curl -L -s -o /etc/nginx/conf.d/ots_https.conf https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/refs/heads/master/nginx_configs/ots_https
@@ -339,13 +340,16 @@ sudo curl -L -s -o /etc/nginx/conf.d/ots_https.conf https://raw.githubuserconten
 sudo sed -i "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.pem~g" /etc/nginx/conf.d/ots_https.conf
 sudo sed -i "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.pem~g" /etc/nginx/conf.d/ots_certificate_enrollment.conf
 sudo sed -i "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.pem~g" /etc/nginx/streams-available/rabbitmq
+sudo sed -i "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.pem~g" /etc/nginx/streams-available/mediamtx
 sudo sed -i "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.nopass.key~g" /etc/nginx/conf.d/ots_https.conf
 sudo sed -i "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.nopass.key~g" /etc/nginx/conf.d/ots_certificate_enrollment.conf
 sudo sed -i "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.nopass.key~g" /etc/nginx/streams-available/rabbitmq
+sudo sed -i "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.nopass.key~g" /etc/nginx/streams-available/mediamtx
 sudo sed -i "s~CA_CERT_FILE~${HOME}/ots/ca/ca.pem~g" /etc/nginx/conf.d/ots_https.conf
 sudo sed -i "s~CA_CERT_FILE~${HOME}/ots/ca/ca.pem~g" /etc/nginx/conf.d/ots_certificate_enrollment.conf
 
 sudo ln -s /etc/nginx/streams-available/rabbitmq /etc/nginx/streams-enabled/
+sudo ln -s /etc/nginx/streams-available/mediamtx /etc/nginx/streams-enabled/
 
 # Configure SELinux so nginx can start
 sudo semanage fcontext -a -t httpd_sys_content_t "$HOME/ots(/.*)?"
