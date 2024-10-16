@@ -115,6 +115,7 @@ elif [[ "$LATEST_MAJOR" -ne "$INSTALLED_MAJOR" || "$LATEST_MINOR" -ne "$INSTALLE
   ~/.opentakserver_venv/bin/pip install opentakserver -U
 
   echo "${GREEN}Upgrading database schema...${NC}"
+  cd ~/.opentakserver_venv/lib/python3.1*/site-packages/opentakserver
   ~/.opentakserver_venv/bin/flask db upgrade
 
   echo "${GREEN}Upgrading UI...${NC}"
