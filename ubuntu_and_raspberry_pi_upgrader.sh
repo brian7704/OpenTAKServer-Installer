@@ -186,6 +186,14 @@ stream {
   cd "$INSTALLER_DIR"
 fi
 
+# Add the X-Ssl-Cert header to ots_https
+sudo grep "X-Ssl-Cert" /etc/nginx/sites-available/ots_https
+if [[ $? -ne 0 ]]; then
+  echo "${GREEN}Adding X-Ssl-Cert header to ots_https...${NC}"
+  sudo sed -i 's~proxy_set_header X-Forwarded-For $remote_addr;~proxy_set_header X-Forwarded-For $remote_addr;\nproxy_set_header X-Ssl-Cert $ssl_client_escaped_cert;~g' /etc/nginx/sites-available/ots_https
+  sudo systemctl restart nginx
+fi
+
 # Check if "location /api" is in the server block for port 8443
 # This is required for the plugin update server functionality to work
 API=$(sudo grep "location /api" /etc/nginx/sites-enabled/ots_https | wc -l)
@@ -199,6 +207,12 @@ if [[ $API -eq 1 ]]; then
         proxy_set_header X-Forwarded-Proto \$scheme; \n\
 }~g" /etc/nginx/sites-enabled/ots_https
   sudo systemctl restart nginx
+fi
+
+# Make the server's public key if it doesn't exist
+if [ ! -f ~/ots/ca/certs/opentakserver/opentakserver.pub ]; then
+  echo "${GREEN}Generating server's public key...${NC}"
+  openssl x509 -pubkey -in ~/ots/ca/certs/opentakserver/opentakserver.pem -out ~/ots/ca/certs/opentakserver/opentakserver.pub
 fi
 
 # Check if MQTT is enabled in RabbitMQ
