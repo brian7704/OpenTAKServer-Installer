@@ -20,6 +20,7 @@ show_help () {
 }
 
 BLEEDING_EDGE=0
+BRANCH=""
 
 eval set -- "$OPTS"
 
@@ -63,7 +64,7 @@ fi
 
 if [ "$NAME" != "Ubuntu" ] && [ "$NAME" != "Raspbian GNU/Linux" ] && [ "$NAME" != "Debian GNU/Linux" ]
 then
-  read -p "${YELLOW} This updater is for Ubuntu and Rapsberry Pi OS but this system is $NAME. Do you want to run anyway? [y/N] ${NC}" confirm < /dev/tty && [[ $confirm == [yY] || $confirm == [yY][eE][sS] ]] || exit 1
+  read -p "${YELLOW} This updater is for Ubuntu and Raspberry Pi OS but this system is $NAME. Do you want to run anyway? [y/N] ${NC}" confirm < /dev/tty && [[ $confirm == [yY] || $confirm == [yY][eE][sS] ]] || exit 1
   rm -fr $INSTALLER_DIR
 fi
 
@@ -96,7 +97,13 @@ LATEST_PATCH=${VERSION_ARRAY[2]}
 
 if [[ "$BLEEDING_EDGE" -eq 1 ]]; then
   echo "${GREEN}Installing OpenTAKServer from git HEAD...${NC}"
-  ~/.opentakserver_venv/bin/pip install git+https://github.com/brian7704/OpenTAKServer.git
+  GIT_URL=git+https://github.com/brian7704/OpenTAKServer.git
+  read -p "${GREEN}What branch would you like to install from? [master]${NC} " BRANCH
+  if [ -n "$BRANCH" ]; then
+    echo "Installing from the ${BRANCH} branch..."
+    GIT_URL="${GIT_URL}@${BRANCH}"
+  fi
+  ~/.opentakserver_venv/bin/pip install "$GIT_URL"
 
   echo "${GREEN}Upgrading database schema...${NC}"
   cd ~/.opentakserver_venv/lib/python3.1*/site-packages/opentakserver
