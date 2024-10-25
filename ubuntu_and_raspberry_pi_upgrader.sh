@@ -96,12 +96,13 @@ LATEST_MINOR=${VERSION_ARRAY[1]}
 LATEST_PATCH=${VERSION_ARRAY[2]}
 
 if [[ "$BLEEDING_EDGE" -eq 1 ]]; then
-  echo "${GREEN}Installing OpenTAKServer from git HEAD...${NC}"
   GIT_URL=git+https://github.com/brian7704/OpenTAKServer.git
-  read -p "${GREEN}What branch would you like to install from? [master]${NC} " BRANCH
+  read -p "${GREEN}What branch would you like to install from? [master]${NC} " BRANCH < /dev/tty
   if [ -n "$BRANCH" ]; then
     echo "Installing from the ${BRANCH} branch..."
     GIT_URL="${GIT_URL}@${BRANCH}"
+  else
+    echo "${GREEN}Installing OpenTAKServer from master branch...${NC}"
   fi
   ~/.opentakserver_venv/bin/pip install "$GIT_URL"
 
