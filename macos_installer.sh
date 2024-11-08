@@ -101,6 +101,15 @@ sed -i '' "s~/var/www/html~/opt/homebrew/var/www~g" /opt/homebrew/etc/nginx/serv
 sed -i '' "s~/var/www/html~/opt/homebrew/var/www~g" /opt/homebrew/etc/nginx/servers/ots_https
 sed -i '' "s~/var/www/html~/opt/homebrew/var/www~g" /opt/homebrew/etc/nginx/servers/ots_certificate_enrollment
 
+tee /opt/homebrew/etc/nginx/proxy_params >/dev/null << EOF
+proxy_set_header Host \$http_host;
+proxy_set_header X-Real-IP \$remote_addr;
+proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+proxy_set_header X-Forwarded-Proto \$scheme;
+EOF
+
+mkdir /opt/homebrew/Cellar/nginx/*/logs
+
 mkdir /opt/homebrew/var/www/opentakserver
 cd /opt/homebrew/var/www/opentakserver
 lastversion --assets extract brian7704/OpenTAKServer-UI
