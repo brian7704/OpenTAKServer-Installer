@@ -76,12 +76,12 @@ sed -i '' "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.p
 sed -i '' "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.nopass.key~g" /opt/homebrew/etc/mediamtx/mediamtx.yml
 sed -i '' "s~OTS_FOLDER~${HOME}/ots~g" /opt/homebrew/etc/mediamtx/mediamtx.yml
 
-brew services start mediamtx
+sudo launchctl load -w /Library/LaunchDaemons/homebrew.mxcl.mediamtx.plist
 
 echo "${GREEN}Configuring nginx...${NC}"
 mkdir /opt/homebrew/etc/nginx/streams
 rm /opt/homebrew/etc/nginx/nginx.conf
-curl -sL https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/refs/heads/master/nginx_configs/nginx_macos.conf -o /opt/homebrew/etc/nginx/nginx.conf
+curl -sL https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/refs/heads/master/macos_configs/nginx.conf -o /opt/homebrew/etc/nginx/nginx.conf
 curl -sL https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/nginx_configs/rabbitmq -o /opt/homebrew/etc/nginx/streams/rabbitmq
 curl -sL https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/refs/heads/master/nginx_configs/mediamtx -o /opt/homebrew/etc/nginx/streams/mediamtx
 curl -sL https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/refs/heads/master/nginx_configs/ots_certificate_enrollment -o /opt/homebrew/etc/nginx/servers/ots_certificate_enrollment
@@ -115,7 +115,7 @@ mkdir /opt/homebrew/var/www/opentakserver
 cd /opt/homebrew/var/www/opentakserver
 lastversion --assets extract brian7704/OpenTAKServer-UI
 
-brew services start nginx
+sudo launchctl load -w /Library/LaunchDaemons/homebrew.mxcl.nginx.plist
 
 echo "${GREEN}Configuring RabbitMQ...${NC}"
 echo "
@@ -129,39 +129,26 @@ auth_http.vhost_path    = http://127.0.0.1:8081/api/rabbitmq/vhost
 auth_http.resource_path = http://127.0.0.1:8081/api/rabbitmq/resource
 auth_http.topic_path    = http://127.0.0.1:8081/api/rabbitmq/topic" >> /opt/homebrew/etc/rabbitmq/rabbitmq.conf
 
-brew services start rabbitmq
+sudo launchctl load -w /Library/LaunchDaemons/homebrew.mxcl.rabbitmq.plist
 
-mkdir -p ~/Library/LaunchAgents/
+sudo curl -sL https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/refs/heads/master/macos_configs/launchd.opentakserver.plist -o /Library/LaunchDaemons/launchd.opentakserver.plist
+sudo curl -sL https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/refs/heads/master/macos_configs/homebrew.mxcl.mediamtx.plist -o /Library/LaunchDaemons/homebrew.mxcl.mediamtx.plist
+sudo curl -sL https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/refs/heads/master/macos_configs/homebrew.mxcl.nginx.plist -o /Library/LaunchDaemons/homebrew.mxcl.nginx.plist
+sudo curl -sL https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/refs/heads/master/macos_configs/homebrew.mxcl.rabbitmq.plist -o /Library/LaunchDaemons/homebrew.mxcl.rabbitmq.plist
 
-tee ~/Library/LaunchAgents/launchd.opentakserver.plist >/dev/null << EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-  <dict>
-    <key>KeepAlive</key>
-    <dict>
-      <key>Crashed</key>
-      <true/>
-    </dict>
-    <key>Label</key>
-    <string>launched.opentakserver</string>
-    <key>ProgramArguments</key>
-    <array>
-      <string>sh</string>
-      <string>-c</string>
-      <string>${HOME}/.opentakserver_venv/bin/opentakserver</string>
-    </array>
-    <key>RunAtLoad</key>
-    <true/>
-    <key>UserName</key>
-    <string>$(whoami)</string>
-    <key>WorkingDirectory</key>
-    <string>${HOME}/ots</string>
-  </dict>
-</plist>
-EOF
+sudo sed -i '' "s/USERNAME/${USERNAME}/g" /Library/LaunchDaemons/homebrew.mxcl.rabbitmq.plist
+sudo sed -i '' "s/USERNAME/${USERNAME}/g" /Library/LaunchDaemons/homebrew.mxcl.nginx.plist
+sudo sed -i '' "s/USERNAME/${USERNAME}/g" /Library/LaunchDaemons/homebrew.mxcl.mediamtx.plist
+sudo sed -i '' "s/USERNAME/${USERNAME}/g" /Library/LaunchDaemons/launchd.opentakserver.plist
+sudo sed -i '' "s~HOME_FOLDER~${HOME}~g" /Library/LaunchDaemons/launchd.opentakserver.plist
 
-launchctl load -w ~/Library/LaunchAgents/launchd.opentakserver.plist
+sudo chown root /Library/LaunchDaemons/homebrew.mxcl.rabbitmq.plist
+sudo chown root /Library/LaunchDaemons/homebrew.mxcl.nginx.plist
+sudo chown root /Library/LaunchDaemons/homebrew.mxcl.mediamtx.plist
+sudo chown root /Library/LaunchDaemons/launchd.opentakserver.plist
+
 deactivate
 
-echo "${GREEN}Finished installing OpenTAKServer. You can start it by running ~/.opentakserver_venv/bin/opentakserver${NC}"
+sudo launchctl load -w /Library/LaunchDaemons/launchd.opentakserver.plist
+
+echo "${GREEN}Finished installing OpenTAKServer${NC}"
