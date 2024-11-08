@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+        <key>EnvironmentVariables</key>
+        <dict>
+                <key>CONF_ENV_FILE</key>
+                <string>/opt/homebrew/etc/rabbitmq/rabbitmq-env.conf</string>
+                <key>PATH</key>
+                <string>/opt/homebrew/sbin:/usr/sbin:/usr/bin:/bin:/opt/homebrew/bin</string>
+        </dict>
+        <key>Label</key>
+        <string>homebrew.mxcl.rabbitmq</string>
+        <key>LimitLoadToSessionType</key>
+        <array>
+                <string>Aqua</string>
+                <string>Background</string>
+                <string>LoginWindow</string>
+                <string>StandardIO</string>
+                <string>System</string>
+        </array>
+        <key>ProgramArguments</key>
+        <array>
+                <string>/opt/homebrew/opt/rabbitmq/sbin/rabbitmq-server</string>
+        </array>
+        <key>RunAtLoad</key>
+        <true/>
+        <key>StandardErrorPath</key>
+        <string>/opt/homebrew/var/log/rabbitmq/std_error.log</string>
+        <key>StandardOutPath</key>
+        <string>/opt/homebrew/var/log/rabbitmq/std_out.log</string>
+        <key>UserName</key>
+        <string>USERNAME</string>
+</dict>
+</plist>

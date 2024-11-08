@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>KeepAlive</key>
+    <dict>
+      <key>Crashed</key>
+      <true/>
+    </dict>
+    <key>Label</key>
+    <string>launched.opentakserver</string>
+    <key>ProgramArguments</key>
+    <array>
+      <string>sh</string>
+      <string>-c</string>
+      <string>HOME_FOLDER/.opentakserver_venv/bin/opentakserver</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>UserName</key>
+    <string>USERNAME</string>
+    <key>WorkingDirectory</key>
+    <string>HOME_FOLDER/ots</string>
+  </dict>
+</plist>

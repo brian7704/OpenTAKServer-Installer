@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+        <key>Label</key>
+        <string>homebrew.mxcl.nginx</string>
+        <key>LimitLoadToSessionType</key>
+        <array>
+                <string>Aqua</string>
+                <string>Background</string>
+                <string>LoginWindow</string>
+                <string>StandardIO</string>
+                <string>System</string>
+        </array>
+        <key>ProgramArguments</key>
+        <array>
+                <string>/opt/homebrew/opt/nginx/bin/nginx</string>
+                <string>-g</string>
+                <string>daemon off;</string>
+        </array>
+        <key>RunAtLoad</key>
+        <true/>
+        <key>WorkingDirectory</key>
+        <string>/opt/homebrew</string>
+        <key>UserName</key>
+        <string>USERNAME</string>
+</dict>
+</plist>
