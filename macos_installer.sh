@@ -71,9 +71,9 @@ mkdir -p ~/ots/mediamtx/recordings
 
 cd ~/ots/mediamtx
 curl -sL https://github.com/brian7704/OpenTAKServer-Installer/raw/master/mediamtx.yml -o /opt/homebrew/etc/mediamtx/mediamtx.yml
-sed -i "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.pem~g" /opt/homebrew/etc/mediamtx/mediamtx.yml
-sed -i "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.nopass.key~g" /opt/homebrew/etc/mediamtx/mediamtx.yml
-sed -i "s~OTS_FOLDER~${HOME}/ots~g" /opt/homebrew/etc/mediamtx/mediamtx.yml
+sed -i '' "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.pem~g" /opt/homebrew/etc/mediamtx/mediamtx.yml
+sed -i '' "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.nopass.key~g" /opt/homebrew/etc/mediamtx/mediamtx.yml
+sed -i '' "s~OTS_FOLDER~${HOME}/ots~g" /opt/homebrew/etc/mediamtx/mediamtx.yml
 
 brew services start mediamtx
 
@@ -87,19 +87,19 @@ curl -sL https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/ref
 curl -sL https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/refs/heads/master/nginx_configs/ots_http -o /opt/homebrew/etc/nginx/servers
 curl -sL https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/refs/heads/master/nginx_configs/ots_https -o /opt/homebrew/etc/nginx/servers
 
-sed -i "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.pem~g" /opt/homebrew/etc/nginx/servers/ots_https
-sed -i "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.pem~g" /opt/homebrew/etc/nginx/servers/ots_certificate_enrollment
-sed -i "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.pem~g" /opt/homebrew/etc/nginx/streams/rabbitmq
-sed -i "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.pem~g" /opt/homebrew/etc/nginx/streams/mediamtx
-sed -i "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.nopass.key~g" /opt/homebrew/etc/nginx/servers/ots_https
-sed -i "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.nopass.key~g" /opt/homebrew/etc/nginx/servers/ots_certificate_enrollment
-sed -i "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.nopass.key~g" /opt/homebrew/etc/nginx/streams/rabbitmq
-sed -i "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.nopass.key~g" /opt/homebrew/etc/nginx/streams/mediamtx
-sed -i "s~CA_CERT_FILE~${HOME}/ots/ca/ca.pem~g" /opt/homebrew/etc/nginx/servers/ots_https
-sed -i "s~CA_CERT_FILE~${HOME}/ots/ca/ca.pem~g" /opt/homebrew/etc/nginx/servers/ots_certificate_enrollment
-sed -i "s~/var/www/html~/opt/homebrew/var/www~g" /opt/homebrew/etc/nginx/servers/ots_http
-sed -i "s~/var/www/html~/opt/homebrew/var/www~g" /opt/homebrew/etc/nginx/servers/ots_https
-sed -i "s~/var/www/html~/opt/homebrew/var/www~g" /opt/homebrew/etc/nginx/servers/ots_certificate_enrollment
+sed -i '' "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.pem~g" /opt/homebrew/etc/nginx/servers/ots_https
+sed -i '' "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.pem~g" /opt/homebrew/etc/nginx/servers/ots_certificate_enrollment
+sed -i '' "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.pem~g" /opt/homebrew/etc/nginx/streams/rabbitmq
+sed -i '' "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.pem~g" /opt/homebrew/etc/nginx/streams/mediamtx
+sed -i '' "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.nopass.key~g" /opt/homebrew/etc/nginx/servers/ots_https
+sed -i '' "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.nopass.key~g" /opt/homebrew/etc/nginx/servers/ots_certificate_enrollment
+sed -i '' "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.nopass.key~g" /opt/homebrew/etc/nginx/streams/rabbitmq
+sed -i '' "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.nopass.key~g" /opt/homebrew/etc/nginx/streams/mediamtx
+sed -i '' "s~CA_CERT_FILE~${HOME}/ots/ca/ca.pem~g" /opt/homebrew/etc/nginx/servers/ots_https
+sed -i '' "s~CA_CERT_FILE~${HOME}/ots/ca/ca.pem~g" /opt/homebrew/etc/nginx/servers/ots_certificate_enrollment
+sed -i '' "s~/var/www/html~/opt/homebrew/var/www~g" /opt/homebrew/etc/nginx/servers/ots_http
+sed -i '' "s~/var/www/html~/opt/homebrew/var/www~g" /opt/homebrew/etc/nginx/servers/ots_https
+sed -i '' "s~/var/www/html~/opt/homebrew/var/www~g" /opt/homebrew/etc/nginx/servers/ots_certificate_enrollment
 
 mkdir /opt/homebrew/var/www/opentakserver
 cd /opt/homebrew/var/www/opentakserver
