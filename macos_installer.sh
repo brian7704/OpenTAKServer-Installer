@@ -68,6 +68,7 @@ flask ots create-ca
 
 echo "${GREEN}Configuring MediaMTX...${NC}"
 mkdir -p ~/ots/mediamtx/recordings
+ln -s /opt/homebrew/etc/mediamtx/mediamtx.yml ~/ots/mediamtx/mediamtx.yml
 
 cd ~/ots/mediamtx
 curl -sL https://github.com/brian7704/OpenTAKServer-Installer/raw/master/mediamtx.yml -o /opt/homebrew/etc/mediamtx/mediamtx.yml
@@ -130,5 +131,37 @@ auth_http.topic_path    = http://127.0.0.1:8081/api/rabbitmq/topic" >> /opt/home
 
 brew services start rabbitmq
 
-echo "${GREEN}Finished installing OpenTAKServer. You can start it by running ~/.opentakserver_venv/bin/opentakserver${NC}"
+mkdir -p ~/Library/LaunchAgents/
+
+tee ~/Library/LaunchAgents/launchd.opentakserver.plist >/dev/null << EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>KeepAlive</key>
+    <dict>
+      <key>Crashed</key>
+      <true/>
+    </dict>
+    <key>Label</key>
+    <string>launched.opentakserver</string>
+    <key>ProgramArguments</key>
+    <array>
+      <string>sh</string>
+      <string>-c</string>
+      <string>${HOME}/.opentakserver_venv/bin/opentakserver</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>UserName</key>
+    <string>$(whoami)</string>
+    <key>WorkingDirectory</key>
+    <string>${HOME}/ots</string>
+  </dict>
+</plist>
+EOF
+
+launchctl load -w ~/Library/LaunchAgents/launchd.opentakserver.plist
 deactivate
+
+echo "${GREEN}Finished installing OpenTAKServer. You can start it by running ~/.opentakserver_venv/bin/opentakserver${NC}"
