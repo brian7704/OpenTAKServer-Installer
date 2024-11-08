@@ -4,7 +4,7 @@ INSTALLER_DIR=/tmp/ots_installer
 mkdir -p $INSTALLER_DIR
 cd $INSTALLER_DIR
 
-wget https://github.com/brian7704/OpenTAKServer-Installer/raw/master/colors.sh -qO "$INSTALLER_DIR"/colors.sh
+curl -sL https://github.com/brian7704/OpenTAKServer-Installer/raw/master/colors.sh -o "$INSTALLER_DIR"/colors.sh
 . "$INSTALLER_DIR"/colors.sh
 
 MACOS_VERSION=$(sw_vers --productVersion)
