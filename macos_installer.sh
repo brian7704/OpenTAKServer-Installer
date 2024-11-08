@@ -126,7 +126,7 @@ auth_http.http_method   = post
 auth_http.user_path     = http://127.0.0.1:8081/api/rabbitmq/auth
 auth_http.vhost_path    = http://127.0.0.1:8081/api/rabbitmq/vhost
 auth_http.resource_path = http://127.0.0.1:8081/api/rabbitmq/resource
-auth_http.topic_path    = http://127.0.0.1:8081/api/rabbitmq/topic" >> /opt/homebrew/etc/rabbitmq/rabbitmq-env.conf
+auth_http.topic_path    = http://127.0.0.1:8081/api/rabbitmq/topic" >> /opt/homebrew/etc/rabbitmq/rabbitmq.conf
 
 brew services start rabbitmq
 
