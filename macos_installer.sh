@@ -33,7 +33,7 @@ brew &> /dev/null
 if [ "$?" -eq 127 ]
 then
   echo "${GREEN}Installing homebrew...${NC}"
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  INTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
   # Add the brew command to $PATH
   echo >> ~/.zprofile
@@ -44,27 +44,26 @@ fi
 mkdir -p ~/ots
 curl -sL https://github.com/brian7704/OpenTAKServer-Installer/raw/master/iconsets.sqlite -o ~/ots/ots.db
 
-echo "${GREEN}Installing prerequisites via brew. You may be prompted for your sudo password${NC}"
+echo "${GREEN}Installing prerequisites via brew...${NC}"
 
-brew install rabbitmq python@3.12 nginx ffmpeg mediamtx
+# Without the echo "", brew install causes the rest of the script to fail https://github.com/Homebrew/homebrew-core/issues/141712
+echo "" | brew install rabbitmq python@3.12 nginx ffmpeg mediamtx
 
-echo "${GREEN} Installing OpenTAKServer from PyPI...${NC}"
-python3.12 -m venv --system-site-packages ~/.opentakserver_venv
-source "$HOME"/.opentakserver_venv/bin/activate
-pip3.12 install opentakserver
-echo "${GREEN}OpenTAKServer Installed!${NC}"
+sudo curl -sL https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/refs/heads/master/macos_configs/launchd.opentakserver.plist -o /Library/LaunchDaemons/launchd.opentakserver.plist
+sudo curl -sL https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/refs/heads/master/macos_configs/homebrew.mxcl.mediamtx.plist -o /Library/LaunchDaemons/homebrew.mxcl.mediamtx.plist
+sudo curl -sL https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/refs/heads/master/macos_configs/homebrew.mxcl.nginx.plist -o /Library/LaunchDaemons/homebrew.mxcl.nginx.plist
+sudo curl -sL https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/refs/heads/master/macos_configs/homebrew.mxcl.rabbitmq.plist -o /Library/LaunchDaemons/homebrew.mxcl.rabbitmq.plist
 
-echo "${GREEN}Initializing Database...${NC}"
-cd "$HOME"/.opentakserver_venv/lib/python3.12/site-packages/opentakserver
-flask db upgrade
-cd "$INSTALLER_DIR"
-echo "${GREEN}Finished initializing database!${NC}"
+sudo sed -i '' "s/USERNAME/${USERNAME}/g" /Library/LaunchDaemons/homebrew.mxcl.rabbitmq.plist
+sudo sed -i '' "s/USERNAME/${USERNAME}/g" /Library/LaunchDaemons/homebrew.mxcl.nginx.plist
+sudo sed -i '' "s/USERNAME/${USERNAME}/g" /Library/LaunchDaemons/homebrew.mxcl.mediamtx.plist
+sudo sed -i '' "s/USERNAME/${USERNAME}/g" /Library/LaunchDaemons/launchd.opentakserver.plist
+sudo sed -i '' "s~HOME_FOLDER~${HOME}~g" /Library/LaunchDaemons/launchd.opentakserver.plist
 
-echo "${GREEN}Creating certificate authority...${NC}"
-
-mkdir -p ~/ots/ca
-cd "$HOME"/.opentakserver_venv/lib/python3.12/site-packages/opentakserver
-flask ots create-ca
+sudo chown root /Library/LaunchDaemons/homebrew.mxcl.rabbitmq.plist
+sudo chown root /Library/LaunchDaemons/homebrew.mxcl.nginx.plist
+sudo chown root /Library/LaunchDaemons/homebrew.mxcl.mediamtx.plist
+sudo chown root /Library/LaunchDaemons/launchd.opentakserver.plist
 
 echo "${GREEN}Configuring MediaMTX...${NC}"
 mkdir -p ~/ots/mediamtx/recordings
@@ -79,7 +78,7 @@ sed -i '' "s~OTS_FOLDER~${HOME}/ots~g" /opt/homebrew/etc/mediamtx/mediamtx.yml
 sudo launchctl load -w /Library/LaunchDaemons/homebrew.mxcl.mediamtx.plist
 
 echo "${GREEN}Configuring nginx...${NC}"
-mkdir /opt/homebrew/etc/nginx/streams
+mkdir -p /opt/homebrew/etc/nginx/streams
 rm /opt/homebrew/etc/nginx/nginx.conf
 curl -sL https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/refs/heads/master/macos_configs/nginx.conf -o /opt/homebrew/etc/nginx/nginx.conf
 curl -sL https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/nginx_configs/rabbitmq -o /opt/homebrew/etc/nginx/streams/rabbitmq
@@ -109,11 +108,8 @@ proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
 proxy_set_header X-Forwarded-Proto \$scheme;
 EOF
 
-mkdir /opt/homebrew/Cellar/nginx/*/logs
-
-mkdir /opt/homebrew/var/www/opentakserver
-cd /opt/homebrew/var/www/opentakserver
-lastversion --assets extract brian7704/OpenTAKServer-UI
+NGINX_CELLAR=`readlink -f $(brew --prefix nginx)`
+mkdir -p "$NGINX_CELLAR"/logs
 
 sudo launchctl load -w /Library/LaunchDaemons/homebrew.mxcl.nginx.plist
 
@@ -131,21 +127,26 @@ auth_http.topic_path    = http://127.0.0.1:8081/api/rabbitmq/topic" >> /opt/home
 
 sudo launchctl load -w /Library/LaunchDaemons/homebrew.mxcl.rabbitmq.plist
 
-sudo curl -sL https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/refs/heads/master/macos_configs/launchd.opentakserver.plist -o /Library/LaunchDaemons/launchd.opentakserver.plist
-sudo curl -sL https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/refs/heads/master/macos_configs/homebrew.mxcl.mediamtx.plist -o /Library/LaunchDaemons/homebrew.mxcl.mediamtx.plist
-sudo curl -sL https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/refs/heads/master/macos_configs/homebrew.mxcl.nginx.plist -o /Library/LaunchDaemons/homebrew.mxcl.nginx.plist
-sudo curl -sL https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/refs/heads/master/macos_configs/homebrew.mxcl.rabbitmq.plist -o /Library/LaunchDaemons/homebrew.mxcl.rabbitmq.plist
+echo "${GREEN} Installing OpenTAKServer from PyPI...${NC}"
+python3.12 -m venv --system-site-packages ~/.opentakserver_venv
+source "$HOME"/.opentakserver_venv/bin/activate
+pip3.12 install opentakserver
+mkdir -p /opt/homebrew/var/www/opentakserver
+cd /opt/homebrew/var/www/opentakserver
+lastversion --assets extract brian7704/OpenTAKServer-UI
+echo "${GREEN}OpenTAKServer Installed!${NC}"
 
-sudo sed -i '' "s/USERNAME/${USERNAME}/g" /Library/LaunchDaemons/homebrew.mxcl.rabbitmq.plist
-sudo sed -i '' "s/USERNAME/${USERNAME}/g" /Library/LaunchDaemons/homebrew.mxcl.nginx.plist
-sudo sed -i '' "s/USERNAME/${USERNAME}/g" /Library/LaunchDaemons/homebrew.mxcl.mediamtx.plist
-sudo sed -i '' "s/USERNAME/${USERNAME}/g" /Library/LaunchDaemons/launchd.opentakserver.plist
-sudo sed -i '' "s~HOME_FOLDER~${HOME}~g" /Library/LaunchDaemons/launchd.opentakserver.plist
+echo "${GREEN}Initializing Database...${NC}"
+cd "$HOME"/.opentakserver_venv/lib/python3.12/site-packages/opentakserver
+flask db upgrade
+cd "$INSTALLER_DIR"
+echo "${GREEN}Finished initializing database!${NC}"
 
-sudo chown root /Library/LaunchDaemons/homebrew.mxcl.rabbitmq.plist
-sudo chown root /Library/LaunchDaemons/homebrew.mxcl.nginx.plist
-sudo chown root /Library/LaunchDaemons/homebrew.mxcl.mediamtx.plist
-sudo chown root /Library/LaunchDaemons/launchd.opentakserver.plist
+echo "${GREEN}Creating certificate authority...${NC}"
+
+mkdir -p ~/ots/ca
+cd "$HOME"/.opentakserver_venv/lib/python3.12/site-packages/opentakserver
+flask ots create-ca
 
 deactivate
 
