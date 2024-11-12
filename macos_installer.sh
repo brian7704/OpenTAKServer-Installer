@@ -7,6 +7,16 @@ cd $INSTALLER_DIR
 curl -sL https://github.com/brian7704/OpenTAKServer-Installer/raw/master/colors.sh -o "$INSTALLER_DIR"/colors.sh
 . "$INSTALLER_DIR"/colors.sh
 
+echo "${GREEN}
+
+   ___                        _____     _     _  __  ___
+  / _ \   _ __   ___   _ _   |_   _|   /_\   | |/ / / __|  ___   _ _  __ __  ___   _ _
+ | (_) | | '_ \ / -_) | ' \    | |    / _ \  | ' <  \__ \ / -_) | '_| \ V / / -_) | '_|
+  \___/  | .__/ \___| |_||_|   |_|   /_/ \_\ |_|\_\ |___/ \___| |_|    \_/  \___| |_|
+         |_|
+
+${NC}"
+
 MACOS_VERSION=$(sw_vers --productVersion)
 # Compare versions by their individual major, minor, and patch numbers because bash throws an error on strings like "1.1.10"
 IFS='.'
@@ -111,8 +121,6 @@ EOF
 NGINX_CELLAR=`readlink -f $(brew --prefix nginx)`
 mkdir -p "$NGINX_CELLAR"/logs
 
-sudo launchctl load -w /Library/LaunchDaemons/homebrew.mxcl.nginx.plist
-
 echo "${GREEN}Configuring RabbitMQ...${NC}"
 echo "
 mqtt.listeners.tcp.default = 1883
@@ -151,5 +159,6 @@ flask ots create-ca
 deactivate
 
 sudo launchctl load -w /Library/LaunchDaemons/launchd.opentakserver.plist
+sudo launchctl load -w /Library/LaunchDaemons/homebrew.mxcl.nginx.plist
 
 echo "${GREEN}Finished installing OpenTAKServer${NC}"
