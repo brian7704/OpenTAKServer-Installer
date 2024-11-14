@@ -15,10 +15,6 @@ if (-Not (Test-Path -Path $DATA_DIR)) {
     New-Item -ItemType Directory -Path $DATA_DIR\mediamtx\recordings
 }
 
-if (-Not (Test-Path -Path $DATA_DIR\ots.db)) {
-    Invoke-WebRequest https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/iconsets.sqlite -OutFile $DATA_DIR\ots.db
-}
-
 Write-Host "Installing Chocolatey..." -ForegroundColor Green -BackgroundColor Black
 # https://chocolatey.org/install#individual
 Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))

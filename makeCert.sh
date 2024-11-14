@@ -44,7 +44,7 @@ if [ "$2" ]; then
   SNAME=$2
   mkdir -p certs/"$SNAME"
   if [ -e certs/"$SNAME"/"$SNAME".key ]; then
-    echo "${RED}A key already exists for $SNAME, exiting${NC}"
+    echo "A key already exists for $SNAME"
     exit 1
   fi
 else

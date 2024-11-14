@@ -49,7 +49,6 @@ then
 fi
 
 mkdir -p ~/ots
-curl -L -s -o ~/ots/ots.db https://github.com/brian7704/OpenTAKServer-Installer/raw/master/iconsets.sqlite
 
 echo "${GREEN}Installing packages via dnf. You may be prompted for your sudo password...${NC}"
 

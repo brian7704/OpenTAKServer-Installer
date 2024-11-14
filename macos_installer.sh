@@ -52,7 +52,6 @@ then
 fi
 
 mkdir -p ~/ots
-curl -sL https://github.com/brian7704/OpenTAKServer-Installer/raw/master/iconsets.sqlite -o ~/ots/ots.db
 
 echo "${GREEN}Installing prerequisites via brew...${NC}"
 

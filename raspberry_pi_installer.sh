@@ -25,7 +25,6 @@ then
 fi
 
 mkdir -p ~/ots
-wget https://github.com/brian7704/OpenTAKServer-Installer/raw/master/iconsets.sqlite -qO ~/ots/ots.db
 
 echo "${GREEN}Installing packages via apt. You may be prompted for your sudo password...${NC}"
 
