@@ -29,7 +29,7 @@ mkdir -p ~/ots
 echo "${GREEN}Installing packages via apt. You may be prompted for your sudo password...${NC}"
 
 sudo apt update && sudo NEEDRESTART_MODE=a apt upgrade -y
-sudo NEEDRESTART_MODE=a apt install curl python3 python3-pip python3-venv rabbitmq-server openssl nginx ffmpeg libnginx-mod-stream -y
+sudo NEEDRESTART_MODE=a apt install curl python3 python3-pip python3-venv rabbitmq-server openssl nginx ffmpeg libnginx-mod-stream python3-dev -y
 #sudo cp $INSTALLER_DIR /etc/iptables/
 #sudo iptables-restore < /etc/iptables/rules.v4
 
