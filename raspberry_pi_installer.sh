@@ -217,6 +217,8 @@ WorkingDirectory=${HOME}/ots
 ExecStart=${HOME}/.opentakserver_venv/bin/opentakserver
 Restart=on-failure
 RestartSec=5s
+StandardOutput=append:${HOME}/ots/logs/opentakserver.log
+StandardError=append:${HOME}/ots/logs/opentakserver.log
 [Install]
 WantedBy=multi-user.target
 EOF
