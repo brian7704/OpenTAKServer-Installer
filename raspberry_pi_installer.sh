@@ -254,6 +254,22 @@ StandardError=append:${HOME}/ots/logs/opentakserver.log
 WantedBy=multi-user.target
 EOF
 
+sudo tee /etc/systemd/system/eud_handler_ssl.service >/dev/null << EOF
+[Unit]
+Wants=network.target rabbitmq-server.service
+After=network.target rabbitmq-server.service
+[Service]
+User=$(whoami)
+WorkingDirectory=${HOME}/ots
+ExecStart=${HOME}/.opentakserver_venv/bin/eud_handler --ssl
+Restart=on-failure
+RestartSec=5s
+StandardOutput=append:${HOME}/ots/logs/opentakserver.log
+StandardError=append:${HOME}/ots/logs/opentakserver.log
+[Install]
+WantedBy=multi-user.target
+EOF
+
 sudo systemctl daemon-reload
 sudo systemctl enable opentakserver
 sudo systemctl start opentakserver
@@ -263,6 +279,9 @@ sudo systemctl start cot_parser
 
 sudo systemctl enable eud_handler
 sudo systemctl start eud_handler
+
+sudo systemctl enable eud_handler_ssl
+sudo systemctl start eud_handler_ssl
 
 echo "${GREEN}Configuring RabbitMQ...${NC}"
 sudo wget https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/rabbitmq.conf -qO /etc/rabbitmq/rabbitmq.conf
