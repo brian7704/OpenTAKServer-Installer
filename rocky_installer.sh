@@ -375,7 +375,6 @@ Wants=network.target rabbitmq-server.service
 After=network.target rabbitmq-server.service
 [Service]
 User=$(whoami)
-StandardOutput=null
 WorkingDirectory=${HOME}/ots
 ExecStart=${HOME}/.opentakserver_venv/bin/opentakserver
 Restart=on-failure
