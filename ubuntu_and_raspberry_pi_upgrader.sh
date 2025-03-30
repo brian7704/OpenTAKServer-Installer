@@ -96,7 +96,7 @@ LATEST_MINOR=${VERSION_ARRAY[1]}
 LATEST_PATCH=${VERSION_ARRAY[2]}
 
 if [[ "$BLEEDING_EDGE" -eq 1 ]]; then
-  GIT_URL=git+https://github.com/brian7704/OpenTAKServer.git
+  GIT_URL=git+https://github.com/brian7704/OpenTAKServer.git@cot_parser
   read -p "${GREEN}What branch would you like to install from? [master]${NC} " BRANCH < /dev/tty
   if [ -n "$BRANCH" ]; then
     echo "Installing from the ${BRANCH} branch..."
