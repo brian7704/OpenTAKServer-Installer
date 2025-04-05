@@ -138,7 +138,8 @@ fi
 # Upgrade MediaMTX
 MEDIAMTX_VERSION=$(~/ots/mediamtx/mediamtx --version)
 MEDIAMTX_VERSION="${MEDIAMTX_VERSION//v}"
-NEWEST_MEDIAMTX_VERSION=$(~/.opentakserver_venv/bin/lastversion bluenviron/mediamtx)
+#NEWEST_MEDIAMTX_VERSION=$(~/.opentakserver_venv/bin/lastversion bluenviron/mediamtx)
+NEWEST_MEDIAMTX_VERSION="1.10.0"
 
 if [ "$MEDIAMTX_VERSION" != "$NEWEST_MEDIAMTX_VERSION" ]; then
   echo "${GREEN}Upgrading MediaMTX from version ${MEDIAMTX_VERSION} to ${NEWEST_MEDIAMTX_VERSION}...${NC}"
@@ -150,11 +151,11 @@ if [ "$MEDIAMTX_VERSION" != "$NEWEST_MEDIAMTX_VERSION" ]; then
   ARCH=$(uname -m)
   KERNEL_BITS=$(getconf LONG_BIT)
   if [ "$ARCH" == "x86_64" ]; then
-    ~/.opentakserver_venv/bin/lastversion --filter '~*linux_amd64' --assets download bluenviron/mediamtx
+    ~/.opentakserver_venv/bin/lastversion --filter '~*linux_amd64' --assets download bluenviron/mediamtx --only 1.10.0
   elif [ "$KERNEL_BITS" == 32 ]; then
-    ~/.opentakserver_venv/bin/lastversion --filter '~*linux_armv7' --assets download bluenviron/mediamtx
+    ~/.opentakserver_venv/bin/lastversion --filter '~*linux_armv7' --assets download bluenviron/mediamtx --only 1.10.0
   elif [ "$KERNEL_BITS" == 64 ]; then
-    ~/.opentakserver_venv/bin/lastversion --filter '~*linux_arm64v8' --assets download bluenviron/mediamtx
+    ~/.opentakserver_venv/bin/lastversion --filter '~*linux_arm64v8' --assets download bluenviron/mediamtx --only 1.10.0
   fi
 
   tar -xf ./*.tar.gz

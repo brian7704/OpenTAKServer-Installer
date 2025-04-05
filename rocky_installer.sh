@@ -252,11 +252,11 @@ cd ~/ots/mediamtx
 ARCH=$(uname -m)
 KERNEL_BITS=$(getconf LONG_BIT)
 if [ "$ARCH" == "x86_64" ]; then
-  lastversion --filter '~*linux_amd64' --assets download bluenviron/mediamtx
+  lastversion --filter '~*linux_amd64' --assets download bluenviron/mediamtx --only 1.10.0
 elif [ "$KERNEL_BITS" == 32 ]; then
-  lastversion --filter '~*linux_armv7' --assets download bluenviron/mediamtx
+  lastversion --filter '~*linux_armv7' --assets download bluenviron/mediamtx --only 1.10.0
 elif [ "$KERNEL_BITS" == 64 ]; then
-  lastversion --filter '~*linux_arm64v8' --assets download bluenviron/mediamtx
+  lastversion --filter '~*linux_arm64v8' --assets download bluenviron/mediamtx --only 1.10.0
 fi
 
 tar -xf ./*.tar.gz
