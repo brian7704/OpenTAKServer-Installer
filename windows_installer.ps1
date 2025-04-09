@@ -20,7 +20,8 @@ Write-Host "Installing Chocolatey..." -ForegroundColor Green -BackgroundColor Bl
 Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 
 Write-Host "Installing prerequisites..." -ForegroundColor Green -BackgroundColor Black
-choco install python3 openssl rabbitmq nginx sed -y
+choco install python3 --version 3.12.10 -y
+choco install openssl rabbitmq nginx sed -y
 
 # Need this so the openssl pkcs12 -legacy option works
 [Environment]::SetEnvironmentVariable("OPENSSL_MODULES", "C:\Program Files\OpenSSL-Win64\bin", "Machine")
