@@ -46,9 +46,9 @@ flask.exe ots create-ca
 Write-Host "Finished creating the certificate authority!" -ForegroundColor Green -BackgroundColor Black
 
 Write-Host "Installing MediaMTX.." -ForegroundColor Green -BackgroundColor Black
-$url = lastversion --filter '~*windows' --assets bluenviron/mediamtx
+$url = lastversion --filter '~*windows' --assets bluenviron/mediamtx --only 1.10.0
 $filename = $url.Split("/")[-1]
-lastversion --filter '~*windows' -o $DATA_DIR\mediamtx\$filename --assets download bluenviron/mediamtx
+lastversion --filter '~*windows' -o $DATA_DIR\mediamtx\$filename --assets download bluenviron/mediamtx --only 1.10.0
 Set-Location $DATA_DIR\mediamtx
 Expand-Archive -Path mediamtx*.zip -DestinationPath . -Force
 Remove-Item $DATA_DIR\mediamtx\mediamtx.yml -Force
