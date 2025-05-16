@@ -96,7 +96,7 @@ LATEST_MINOR=${VERSION_ARRAY[1]}
 LATEST_PATCH=${VERSION_ARRAY[2]}
 
 if [[ "$BLEEDING_EDGE" -eq 1 ]]; then
-  GIT_URL=git+https://github.com/brian7704/OpenTAKServer.git@cot_parser
+  GIT_URL=git+https://github.com/brian7704/OpenTAKServer.git
   read -p "${GREEN}What branch would you like to install from? [master]${NC} " BRANCH < /dev/tty
   if [ -n "$BRANCH" ]; then
     echo "Installing from the ${BRANCH} branch..."
@@ -134,6 +134,75 @@ elif [[ "$LATEST_MAJOR" -ne "$INSTALLED_MAJOR" || "$LATEST_MINOR" -ne "$INSTALLE
   echo "${GREEN}Restarting the OpenTAKServer service. Please enter your sudo password if prompted${NC}"
   sudo systemctl restart opentakserver
 fi
+
+if [ ! -f /etc/systemd/system/cot_parser.service ]; then
+  sudo tee /etc/systemd/system/cot_parser.service >/dev/null << EOF
+[Unit]
+Wants=network.target rabbitmq-server.service
+After=network.target rabbitmq-server.service
+[Service]
+User=$(whoami)
+WorkingDirectory=${HOME}/ots
+ExecStart=${HOME}/.opentakserver_venv/bin/cot_parser
+Restart=on-failure
+RestartSec=5s
+StandardOutput=append:${HOME}/ots/logs/opentakserver.log
+StandardError=append:${HOME}/ots/logs/opentakserver.log
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable cot_parser
+sudo systemctl start cot_parser
+fi
+
+if [ ! -f /etc/systemd/system/eud_handler.service ]; then
+  sudo tee /etc/systemd/system/eud_handler.service >/dev/null << EOF
+[Unit]
+Wants=network.target rabbitmq-server.service
+After=network.target rabbitmq-server.service
+[Service]
+User=$(whoami)
+WorkingDirectory=${HOME}/ots
+ExecStart=${HOME}/.opentakserver_venv/bin/eud_handler
+Restart=on-failure
+RestartSec=5s
+StandardOutput=append:${HOME}/ots/logs/opentakserver.log
+StandardError=append:${HOME}/ots/logs/opentakserver.log
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable eud_handler
+sudo systemctl start eud_handler
+fi
+
+if [ ! -f /etc/systemd/system/eud_handler_ssl.service ]; then
+  sudo tee /etc/systemd/system/eud_handler_ssl.service >/dev/null << EOF
+[Unit]
+Wants=network.target rabbitmq-server.service
+After=network.target rabbitmq-server.service
+[Service]
+User=$(whoami)
+WorkingDirectory=${HOME}/ots
+ExecStart=${HOME}/.opentakserver_venv/bin/eud_handler --ssl
+Restart=on-failure
+RestartSec=5s
+StandardOutput=append:${HOME}/ots/logs/opentakserver.log
+StandardError=append:${HOME}/ots/logs/opentakserver.log
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable eud_handler_ssl
+sudo systemctl start eud_handler_ssl
+fi
+
+sudo systemctl enable eud_handler_ssl
+sudo systemctl start eud_handler_ssl
 
 # Upgrade MediaMTX
 MEDIAMTX_VERSION=$(~/ots/mediamtx/mediamtx --version)
