@@ -210,6 +210,7 @@ sudo tee /etc/systemd/system/opentakserver.service >/dev/null << EOF
 [Unit]
 Wants=network.target rabbitmq-server.service
 After=network.target rabbitmq-server.service
+Requires=eud_handler eud_handler_ssl cot_parser
 [Service]
 User=$(whoami)
 WorkingDirectory=${HOME}/ots

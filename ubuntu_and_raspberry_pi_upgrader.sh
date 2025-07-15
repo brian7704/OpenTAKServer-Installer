@@ -201,8 +201,25 @@ sudo systemctl enable eud_handler_ssl
 sudo systemctl start eud_handler_ssl
 fi
 
-sudo systemctl enable eud_handler_ssl
-sudo systemctl start eud_handler_ssl
+# Add "Requires=eud_handler eud_handler_ssl cot_parser" to the systemd unit file
+sudo tee /etc/systemd/system/opentakserver.service >/dev/null << EOF
+[Unit]
+Wants=network.target rabbitmq-server.service
+After=network.target rabbitmq-server.service
+Requires=eud_handler eud_handler_ssl cot_parser
+[Service]
+User=$(whoami)
+WorkingDirectory=${HOME}/ots
+ExecStart=${HOME}/.opentakserver_venv/bin/opentakserver
+Restart=on-failure
+RestartSec=5s
+StandardOutput=append:${HOME}/ots/logs/opentakserver.log
+StandardError=append:${HOME}/ots/logs/opentakserver.log
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
 
 # Upgrade MediaMTX
 MEDIAMTX_VERSION=$(~/ots/mediamtx/mediamtx --version)
