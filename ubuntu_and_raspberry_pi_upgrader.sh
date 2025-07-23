@@ -140,6 +140,7 @@ if [ ! -f /etc/systemd/system/cot_parser.service ]; then
 [Unit]
 Wants=network.target rabbitmq-server.service
 After=network.target rabbitmq-server.service
+PartOf=opentakserver.service
 [Service]
 User=$(whoami)
 WorkingDirectory=${HOME}/ots
@@ -162,6 +163,7 @@ if [ ! -f /etc/systemd/system/eud_handler.service ]; then
 [Unit]
 Wants=network.target rabbitmq-server.service
 After=network.target rabbitmq-server.service
+PartOf=opentakserver.service
 [Service]
 User=$(whoami)
 WorkingDirectory=${HOME}/ots
@@ -184,6 +186,7 @@ if [ ! -f /etc/systemd/system/eud_handler_ssl.service ]; then
 [Unit]
 Wants=network.target rabbitmq-server.service
 After=network.target rabbitmq-server.service
+PartOf=opentakserver.service
 [Service]
 User=$(whoami)
 WorkingDirectory=${HOME}/ots

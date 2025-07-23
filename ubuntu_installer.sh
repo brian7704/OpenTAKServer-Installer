@@ -239,6 +239,7 @@ sudo tee /etc/systemd/system/cot_parser.service >/dev/null << EOF
 [Unit]
 Wants=network.target rabbitmq-server.service
 After=network.target rabbitmq-server.service
+PartOf=opentakserver.service
 [Service]
 User=$(whoami)
 WorkingDirectory=${HOME}/ots
@@ -255,6 +256,7 @@ sudo tee /etc/systemd/system/eud_handler.service >/dev/null << EOF
 [Unit]
 Wants=network.target rabbitmq-server.service
 After=network.target rabbitmq-server.service
+PartOf=opentakserver.service
 [Service]
 User=$(whoami)
 WorkingDirectory=${HOME}/ots
@@ -271,6 +273,7 @@ sudo tee /etc/systemd/system/eud_handler_ssl.service >/dev/null << EOF
 [Unit]
 Wants=network.target rabbitmq-server.service
 After=network.target rabbitmq-server.service
+PartOf=opentakserver.service
 [Service]
 User=$(whoami)
 WorkingDirectory=${HOME}/ots
