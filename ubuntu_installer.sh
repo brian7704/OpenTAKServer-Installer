@@ -145,6 +145,9 @@ mkdir -p ~/ots/mediamtx/recordings
 
 cd ~/ots/mediamtx
 
+# Install youtube streaming support 
+pip3 install yt-dlp
+
 ARCH=$(uname -m)
 KERNEL_BITS=$(getconf LONG_BIT)
 if [ "$ARCH" == "x86_64" ]; then
