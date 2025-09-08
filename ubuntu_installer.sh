@@ -33,48 +33,10 @@ sudo NEEDRESTART_MODE=a apt install curl python3 python3-pip python3-venv rabbit
 #sudo cp $INSTALLER_DIR /etc/iptables/
 #sudo iptables-restore < /etc/iptables/rules.v4
 
-ensureLastVersion() {
-    # Check if lastversion is already available
-    if command -v lastversion &> /dev/null; then
-        echo "lastversion is already available at $(which lastversion). No action needed."
-        return 0
-    fi
-
-    echo "lastversion not found. Installing pipx and lastversion..."
-
-    # Install pipx if not already installed
-    if ! command -v pipx &> /dev/null; then
-        echo "Installing pipx..."
-        sudo apt update
-        sudo apt install pipx -y
-        pipx ensurepath
-    fi
-
-    # Install lastversion via pipx
-    echo "Installing lastversion via pipx..."
-    pipx install lastversion
-
-    # Determine the installed binary location
-    LV_PATH="$HOME/.local/bin/lastversion"
-    if [[ ! -f "$LV_PATH" ]]; then
-        echo "Failed to find lastversion binary at $LV_PATH."
-        return 1
-    fi
-
-    # Create a symlink in /usr/local/bin if it doesn't exist
-    if [[ ! -f /usr/local/bin/lastversion ]]; then
-        echo "Creating symlink in /usr/local/bin..."
-        sudo ln -s "$LV_PATH" /usr/local/bin/lastversion
-    fi
-
-    echo "lastversion installed and available system-wide at $(which lastversion)."
-}
-
-ensureLastVersion
-
 echo "${GREEN} Installing OpenTAKServer from PyPI...${NC}"
 python3 -m venv --system-site-packages ~/.opentakserver_venv
 source "$HOME"/.opentakserver_venv/bin/activate
+python3 -m pip install --upgrade pip setuptools wheel
 pip3 install opentakserver
 echo "${GREEN}OpenTAKServer Installed!${NC}"
 
