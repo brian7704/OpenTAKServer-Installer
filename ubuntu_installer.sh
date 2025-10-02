@@ -35,19 +35,29 @@ echo "${GREEN} Installing OpenTAKServer from PyPI...${NC}"
 python3 -m venv --system-site-packages ~/.opentakserver_venv
 source "$HOME"/.opentakserver_venv/bin/activate
 python3 -m pip install --upgrade pip setuptools wheel
-pip3 install opentakserver
+pip3 install git+https://github.com/brian7704/OpenTAKServer.git@postgres
 echo "${GREEN}OpenTAKServer Installed!${NC}"
 
 echo "${GREEN}Initializing Database...${NC}"
 
-POSTGRESQL_PASSWORD=$(tr -dc 'A-Za-z0-9!?%=' < /dev/urandom | head -c 20)
-sudo su postgres -c "psql -c 'create database ots;'"
-sudo su postgres -c "psql -c \"create role ots with login password '${POSTGRESQL_PASSWORD}';\""
-sudo su postgres -c "psql -c 'GRANT ALL PRIVILEGES  ON DATABASE \"ots\" TO ots;'"
-sudo su postgres -c "psql -d ots -c 'GRANT ALL ON SCHEMA public TO ots;'"
+# Check of Postgres user ots exists
+OTS_USER_EXISTS=$(sudo su postgres -c "psql -tXAc \"SELECT 1 from pg_roles WHERE rolname='ots'\"")
+
+if [ "$OTS_USER_EXISTS" != 1 ];
+then
+  echo "${GREEN}Creating ots database and user in PostgreSQL${NC}"
+  POSTGRESQL_PASSWORD=$(tr -dc 'A-Za-z0-9!?%=' < /dev/urandom | head -c 20)
+  sudo su postgres -c "psql -c 'create database ots;'"
+  sudo su postgres -c "psql -c \"create role ots with login password '${POSTGRESQL_PASSWORD}';\""
+  sudo su postgres -c "psql -c 'GRANT ALL PRIVILEGES  ON DATABASE \"ots\" TO ots;'"
+  sudo su postgres -c "psql -d ots -c 'GRANT ALL ON SCHEMA public TO ots;'"
+  echo "${GREEN}PostgreSQL password is ${YELLOW}${POSTGRESQL_PASSWORD}${NC}"
+fi
 
 cd "$HOME"/.opentakserver_venv/lib/python3.*/site-packages/opentakserver
+# This command won't overwrite config.yml if it exists
 flask ots generate-config
+# This will do nothing if a PostgreSQL password has already been set
 sed -i "s/POSTGRESQL_PASSWORD/${POSTGRESQL_PASSWORD}/g" ~/ots/config.yml
 flask db upgrade
 cd "$INSTALLER_DIR"
