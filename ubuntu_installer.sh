@@ -51,7 +51,6 @@ then
   sudo su postgres -c "psql -c \"create role ots with login password '${POSTGRESQL_PASSWORD}';\""
   sudo su postgres -c "psql -c 'GRANT ALL PRIVILEGES  ON DATABASE \"ots\" TO ots;'"
   sudo su postgres -c "psql -d ots -c 'GRANT ALL ON SCHEMA public TO ots;'"
-  echo "${GREEN}PostgreSQL password is ${YELLOW}${POSTGRESQL_PASSWORD}${NC}"
 fi
 
 cd "$HOME"/.opentakserver_venv/lib/python3.*/site-packages/opentakserver
