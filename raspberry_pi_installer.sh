@@ -29,7 +29,7 @@ mkdir -p ~/ots
 echo "${GREEN}Installing packages via apt. You may be prompted for your sudo password...${NC}"
 
 sudo apt update && sudo NEEDRESTART_MODE=a apt upgrade -y
-sudo NEEDRESTART_MODE=a apt install curl python3 python3-pip python3-venv rabbitmq-server openssl nginx ffmpeg libnginx-mod-stream python3-dev -y
+sudo NEEDRESTART_MODE=a apt install curl python3 python3-pip python3-venv rabbitmq-server openssl nginx ffmpeg libnginx-mod-stream python3-dev postgresql postgresql-contrib postgis -y
 #sudo cp $INSTALLER_DIR /etc/iptables/
 #sudo iptables-restore < /etc/iptables/rules.v4
 
@@ -40,7 +40,24 @@ pip3 install opentakserver
 echo "${GREEN}OpenTAKServer Installed!${NC}"
 
 echo "${GREEN}Initializing Database...${NC}"
+# Check of Postgres user ots exists
+OTS_USER_EXISTS=$(sudo su postgres -c "psql -tXAc \"SELECT 1 from pg_roles WHERE rolname='ots'\"")
+
+if [ "$OTS_USER_EXISTS" != 1 ];
+then
+  echo "${GREEN}Creating ots database and user in PostgreSQL${NC}"
+  POSTGRESQL_PASSWORD=$(tr -dc 'A-Za-z0-9!?%=' < /dev/urandom | head -c 20)
+  sudo su postgres -c "psql -c 'create database ots;'"
+  sudo su postgres -c "psql -c \"create role ots with login password '${POSTGRESQL_PASSWORD}';\""
+  sudo su postgres -c "psql -c 'GRANT ALL PRIVILEGES  ON DATABASE \"ots\" TO ots;'"
+  sudo su postgres -c "psql -d ots -c 'GRANT ALL ON SCHEMA public TO ots;'"
+fi
+
 cd "$HOME"/.opentakserver_venv/lib/python3.*/site-packages/opentakserver
+# This command won't overwrite config.yml if it exists
+flask ots generate-config
+# This will do nothing if a PostgreSQL password has already been set
+sed -i "s/POSTGRESQL_PASSWORD/${POSTGRESQL_PASSWORD}/g" ~/ots/config.yml
 flask db upgrade
 cd "$INSTALLER_DIR"
 echo "${GREEN}Finished initializing database!${NC}"
@@ -117,15 +134,10 @@ fi
 echo "${GREEN}Creating certificate authority...${NC}"
 
 mkdir -p ~/ots/ca
-wget https://github.com/brian7704/OpenTAKServer-Installer/raw/master/config.cfg -qO "$INSTALLER_DIR"/config.cfg
-cp "$INSTALLER_DIR"/config.cfg ~/ots/ca/ca_config.cfg
 
 # Generate CA
-cd "$INSTALLER_DIR"
-wget https://github.com/brian7704/OpenTAKServer-Installer/raw/master/makeRootCa.sh -qO "$INSTALLER_DIR"/makeRootCa.sh
-wget https://github.com/brian7704/OpenTAKServer-Installer/raw/master/makeCert.sh -qO "$INSTALLER_DIR"/makeCert.sh
-bash ./makeRootCa.sh --ca-name OpenTAKServer-CA
-bash ./makeCert.sh server opentakserver
+cd "$HOME"/.opentakserver_venv/lib/python3.*/site-packages/opentakserver
+flask ots create-ca
 
 echo "${GREEN}Installing mediamtx...${NC}"
 mkdir -p ~/ots/mediamtx/recordings

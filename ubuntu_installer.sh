@@ -134,7 +134,7 @@ mkdir -p ~/ots/ca
 
 # Generate CA
 cd "$HOME"/.opentakserver_venv/lib/python3.*/site-packages/opentakserver
-flask ots generate-config
+flask ots create-ca
 
 echo "${GREEN}Installing mediamtx...${NC}"
 mkdir -p ~/ots/mediamtx/recordings
