@@ -181,7 +181,7 @@ elif [[ "$LATEST_MAJOR" -ne "$INSTALLED_MAJOR" || "$LATEST_MINOR" -ne "$INSTALLE
   # Use pgloader to import the old data
   tee ${INSTALLER_DIR}/db.load >/dev/null << EOF
 load database
-     from sqlite:///${INSTALLER_DIR}/ots.db
+     from sqlite:///${HOME}/ots/ots.db
      into pgsql://ots:${POSTGRESQL_PASSWORD}@127.0.0.1/ots
 
  with include drop, create tables, create indexes, reset sequences, quote identifiers, data only
