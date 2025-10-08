@@ -107,8 +107,35 @@ if [[ "$BLEEDING_EDGE" -eq 1 ]]; then
   ~/.opentakserver_venv/bin/pip install "$GIT_URL"
 
   echo "${GREEN}Upgrading database schema...${NC}"
+  sudo apt install postgresql-postgis pgloader
+
+  # Check of Postgres user ots exists
+  OTS_USER_EXISTS=$(sudo su postgres -c "psql -tXAc \"SELECT 1 from pg_roles WHERE rolname='ots'\"")
+
+  if [ "$OTS_USER_EXISTS" != 1 ];
+  then
+    echo "${GREEN}Creating ots database and user in PostgreSQL${NC}"
+    POSTGRESQL_PASSWORD=$(tr -dc 'A-Za-z0-9!?%=' < /dev/urandom | head -c 20)
+    sudo su postgres -c "psql -c 'create database ots;'"
+    sudo su postgres -c "psql -c \"create role ots with login password '${POSTGRESQL_PASSWORD}';\""
+    sudo su postgres -c "psql -c 'GRANT ALL PRIVILEGES  ON DATABASE \"ots\" TO ots;'"
+    sudo su postgres -c "psql -d ots -c 'GRANT ALL ON SCHEMA public TO ots;'"
+  fi
+
   cd ~/.opentakserver_venv/lib/python3.1*/site-packages/opentakserver
   ~/.opentakserver_venv/bin/flask db upgrade
+
+  # Use pgloader to import the old data
+  tee ${INSTALLER_DIR}/db.load >/dev/null << EOF
+load database
+     from sqlite:///${INSTALLER_DIR}/ots.db
+     into pgsql://ots:${POSTGRESQL_PASSWORD}@127.0.0.1/ots
+
+ with include drop, create tables, create indexes, reset sequences, quote identifiers, data only
+ excluding table names like 'alembic_version';
+EOF
+
+  sudo su postgres -c "pgloader ${INSTALLER_DIR}/db.load"
 
   echo "${GREEN}Upgrading UI...${NC}"
   rm -fr /var/www/html/opentakserver/*
