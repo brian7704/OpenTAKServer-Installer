@@ -120,7 +120,12 @@ if [[ "$BLEEDING_EDGE" -eq 1 ]]; then
     sudo su postgres -c "psql -c \"create role ots with login password '${POSTGRESQL_PASSWORD}';\""
     sudo su postgres -c "psql -c 'GRANT ALL PRIVILEGES  ON DATABASE \"ots\" TO ots;'"
     sudo su postgres -c "psql -d ots -c 'GRANT ALL ON SCHEMA public TO ots;'"
+  else
+    POSTGRESQL_PASSWORD=$(cat ~/ots/config.yml | awk 'match($0, /\/\/.*:(.*)@/, a) {print a[1]}')
   fi
+
+  sed -i "s/SQLALCHEMY_DATABASE_URI/\#SQLALCHEMY_DATABASE_URI/g" ~/ots/config.yml
+  echo "SQLALCHEMY_DATABASE_URI: postgresql+psycopg://ots:${POSTGRESQL_PASSWORD}@127.0.0.1/ots" >> ~/ots/config.yml
 
   cd ~/.opentakserver_venv/lib/python3.1*/site-packages/opentakserver
   ~/.opentakserver_venv/bin/flask db upgrade
