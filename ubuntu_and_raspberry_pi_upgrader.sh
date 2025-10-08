@@ -318,51 +318,6 @@ if [ "$MEDIAMTX_VERSION" != "$NEWEST_MEDIAMTX_VERSION" ]; then
   cd "$INSTALLER_DIR"
 fi
 
-# Check if nginx's stream module is enabled
-echo "${GREEN}Checking nginx config. Please enter your sudo password if prompted${NC}"
-sudo grep "stream {" /etc/nginx/nginx.conf &> /dev/null
-if [[ $? -ne 0 ]]; then
-  echo "${GREEN}Configuring nginx...${NC}"
-  sudo apt install libnginx-mod-stream
-  sudo mkdir -p /etc/nginx/streams-available
-  sudo mkdir -p /etc/nginx/streams-enabled
-  cd /etc/nginx/streams-available
-  sudo wget https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/nginx_configs/rabbitmq
-  sudo sed -i "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.pem~g" rabbitmq
-  sudo sed -i "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.nopass.key~g" rabbitmq
-  sudo ln -s /etc/nginx/streams-available/rabbitmq /etc/nginx/streams-enabled/rabbitmq
-  echo "
-stream {
-  include /etc/nginx/streams-enabled/*;
-}
-  " | sudo tee -a /etc/nginx/nginx.conf
-  sudo systemctl restart nginx
-  cd "$INSTALLER_DIR"
-fi
-
-# Add the X-Ssl-Cert header to ots_https
-sudo grep "X-Ssl-Cert" /etc/nginx/sites-available/ots_https
-if [[ $? -ne 0 ]]; then
-  echo "${GREEN}Adding X-Ssl-Cert header to ots_https...${NC}"
-  sudo sed -i 's~proxy_set_header X-Forwarded-For $remote_addr;~proxy_set_header X-Forwarded-For $remote_addr;\nproxy_set_header X-Ssl-Cert $ssl_client_escaped_cert;~g' /etc/nginx/sites-available/ots_https
-  sudo systemctl restart nginx
-fi
-
-# Check if "location /api" is in the server block for port 8443
-# This is required for the plugin update server functionality to work
-API=$(sudo grep "location /api" /etc/nginx/sites-enabled/ots_https | wc -l)
-if [[ $API -eq 1 ]]; then
-  echo "${GREEN}Configuring Nginx. Please enter your sudo password if prompted${NC}"
-  sudo sed -i "s~\# listen \[::\]:8443 ssl ipv6only=on;~location /api { \n\
-        proxy_pass http://127.0.0.1:8081; \n\
-        proxy_http_version 1.1; \n\
-        proxy_set_header Host \$host:8443; \n\
-        proxy_set_header X-Forwarded-For \$remote_addr; \n\
-        proxy_set_header X-Forwarded-Proto \$scheme; \n\
-}~g" /etc/nginx/sites-enabled/ots_https
-  sudo systemctl restart nginx
-fi
-
 # Make the server's public key if it doesn't exist
 if [ ! -f ~/ots/ca/certs/opentakserver/opentakserver.pub ]; then
   echo "${GREEN}Generating server's public key...${NC}"
