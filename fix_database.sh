@@ -9,6 +9,8 @@ wget https://github.com/brian7704/OpenTAKServer-Installer/raw/master/colors.sh -
 
 source "$HOME"/.opentakserver_venv/bin/activate
 
+sudo systemctl stop opentakserver eud_handler eud_handler_ssl cot_parser
+
 sudo su postgres -c "dropdb 'ots'"
 sudo su postgres -c "psql -c 'create database ots;'"
 sudo su postgres -c "psql -c 'GRANT ALL PRIVILEGES  ON DATABASE \"ots\" TO ots;'"
@@ -21,6 +23,7 @@ cd "$HOME"/.opentakserver_venv/lib/python3.*/site-packages/opentakserver
 flask db upgrade
 
 POSTGRESQL_PASSWORD=$(cat ~/ots/config.yml | awk 'match($0, /\/\/.*:(.*)@/, a) {print a[1]}')
+echo "${GREEN}Postgres password is ${YELLOW}${POSTGRESQL_PASSWORD}${NC}"
 
 tee ${INSTALLER_DIR}/db.load >/dev/null << EOF
 load database
