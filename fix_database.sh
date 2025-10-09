@@ -20,6 +20,8 @@ chmod a+r ${INSTALLER_DIR}/ots.db
 cd "$HOME"/.opentakserver_venv/lib/python3.*/site-packages/opentakserver
 flask db upgrade
 
+POSTGRESQL_PASSWORD=$(cat ~/ots/config.yml | awk 'match($0, /\/\/.*:(.*)@/, a) {print a[1]}')
+
 tee ${INSTALLER_DIR}/db.load >/dev/null << EOF
 load database
      from sqlite:///${INSTALLER_DIR}/ots.db
