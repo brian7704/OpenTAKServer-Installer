@@ -11,9 +11,6 @@ source "$HOME"/.opentakserver_venv/bin/activate
 
 sudo systemctl stop opentakserver eud_handler eud_handler_ssl cot_parser
 
-echo "${GREEN}Installing SQLite3...${NC}"
-sudo apt install sqlite3 -y
-
 sudo su postgres -c "dropdb 'ots'"
 sudo su postgres -c "psql -c 'create database ots;'"
 sudo su postgres -c "psql -c 'GRANT ALL PRIVILEGES  ON DATABASE \"ots\" TO ots;'"
@@ -21,8 +18,6 @@ sudo su postgres -c "psql -d ots -c 'GRANT ALL ON SCHEMA public TO ots;'"
 
 cp ~/ots/ots.db $INSTALLER_DIR
 chmod a+r ${INSTALLER_DIR}/ots.db
-
-sqlite3 ${INSTALLER_DIR}/ots.db "INSERT INTO euds (uid, callsign) VALUES ('ANDROID-b961895d55fab476', 'callsign')"
 
 cd "$HOME"/.opentakserver_venv/lib/python3.*/site-packages/opentakserver
 flask db upgrade
