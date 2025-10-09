@@ -12,7 +12,7 @@ source "$HOME"/.opentakserver_venv/bin/activate
 sudo systemctl stop opentakserver eud_handler eud_handler_ssl cot_parser
 
 echo "${GREEN}Installing SQLite3...${NC}"
-sudo apt install sqlite3
+sudo apt install sqlite3 -y
 
 sudo su postgres -c "dropdb 'ots'"
 sudo su postgres -c "psql -c 'create database ots;'"
