@@ -36,28 +36,40 @@ python3 -m venv --system-site-packages ~/.opentakserver_venv
 source "$HOME"/.opentakserver_venv/bin/activate
 python3 -m pip install --upgrade pip setuptools wheel
 pip3 install opentakserver
-echo "${GREEN}OpenTAKServer Installed!${NC}"
-
-echo "${GREEN}Initializing Database...${NC}"
-
-# Check of Postgres user ots exists
-OTS_USER_EXISTS=$(sudo su postgres -c "psql -tXAc \"SELECT 1 from pg_roles WHERE rolname='ots'\"")
-
-if [ "$OTS_USER_EXISTS" != 1 ];
-then
-  echo "${GREEN}Creating ots database and user in PostgreSQL${NC}"
-  POSTGRESQL_PASSWORD=$(tr -dc 'A-Za-z0-9!?%=' < /dev/urandom | head -c 20)
-  sudo su postgres -c "psql -c 'create database ots;'"
-  sudo su postgres -c "psql -c \"create role ots with login password '${POSTGRESQL_PASSWORD}';\""
-  sudo su postgres -c "psql -c 'GRANT ALL PRIVILEGES  ON DATABASE \"ots\" TO ots;'"
-  sudo su postgres -c "psql -d ots -c 'GRANT ALL ON SCHEMA public TO ots;'"
-fi
 
 cd "$HOME"/.opentakserver_venv/lib/python3.*/site-packages/opentakserver
 # This command won't overwrite config.yml if it exists
 flask ots generate-config
-# This will do nothing if a PostgreSQL password has already been set
-sed -i "s/POSTGRESQL_PASSWORD/${POSTGRESQL_PASSWORD}/g" ~/ots/config.yml
+
+echo "${GREEN}OpenTAKServer Installed!${NC}"
+
+echo "${GREEN}Initializing Database...${NC}"
+
+# Check if the ots user and DB exist
+OTS_DB_EXISTS=$(sudo su postgres -c "psql -XtAc \"SELECT 1 FROM pg_database WHERE datname='ots'\"")
+OTS_USER_EXISTS=$(sudo su postgres -c "psql -tXAc \"SELECT 1 from pg_roles WHERE rolname='ots'\"")
+
+if [ "$OTS_USER_EXISTS" != 1 ];
+then
+  echo "${GREEN}Creating ots user in PostgreSQL${NC}"
+  POSTGRESQL_PASSWORD=$(tr -dc 'A-Za-z0-9!?%=' < /dev/urandom | head -c 20)
+  sudo su postgres -c "psql -c \"create role ots with login password '${POSTGRESQL_PASSWORD}';\""
+  sed -i "s/POSTGRESQL_PASSWORD/${POSTGRESQL_PASSWORD}/g" ~/ots/config.yml
+else
+  read -p "${GREEN}PostgreSQL user 'ots' already exists. Please provide its password: ${NC}" POSTGRESQL_PASSWORD < /dev/tty
+  sed -i "s/POSTGRESQL_PASSWORD/${POSTGRESQL_PASSWORD}/g" ~/ots/config.yml
+fi
+
+if [ "$OTS_DB_EXISTS" != 1 ];
+then
+  echo "${GREEN}Creating ots database${NC}"
+  sudo su postgres -c "psql -c 'create database ots;'"
+fi
+
+sudo su postgres -c "psql -c 'GRANT ALL PRIVILEGES  ON DATABASE \"ots\" TO ots;'"
+sudo su postgres -c "psql -d ots -c 'GRANT ALL ON SCHEMA public TO ots;'"
+
+cd "$HOME"/.opentakserver_venv/lib/python3.*/site-packages/opentakserver
 flask db upgrade
 cd "$INSTALLER_DIR"
 echo "${GREEN}Finished initializing database!${NC}"
