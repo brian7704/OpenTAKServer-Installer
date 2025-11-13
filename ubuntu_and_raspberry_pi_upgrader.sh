@@ -106,32 +106,35 @@ if [[ "$BLEEDING_EDGE" -eq 1 ]]; then
   fi
   ~/.opentakserver_venv/bin/pip install "$GIT_URL"
 
-  echo "${GREEN}Upgrading database schema...${NC}"
-  sudo apt install postgresql-postgis pgloader
+  if [ "$(grep postgresql ~/ots/config.yml)" -ne 0 ]; then
+    echo "${GREEN}Migrating from SQLite to PostgreSQL...${NC}"
+    echo "${GREEN}Upgrading database schema...${NC}"
+    sudo apt install postgresql-postgis pgloader
 
-  # Check of Postgres user ots exists
-  OTS_USER_EXISTS=$(sudo su postgres -c "psql -tXAc \"SELECT 1 from pg_roles WHERE rolname='ots'\"")
+    # Check of Postgres user ots exists
+    OTS_USER_EXISTS=$(sudo su postgres -c "psql -tXAc \"SELECT 1 from pg_roles WHERE rolname='ots'\"")
 
-  if [ "$OTS_USER_EXISTS" != 1 ];
-  then
-    echo "${GREEN}Creating ots database and user in PostgreSQL${NC}"
-    POSTGRESQL_PASSWORD=$(tr -dc 'A-Za-z0-9!?%=' < /dev/urandom | head -c 20)
-    sudo su postgres -c "psql -c 'create database ots;'"
-    sudo su postgres -c "psql -c \"create role ots with login password '${POSTGRESQL_PASSWORD}';\""
-    sudo su postgres -c "psql -c 'GRANT ALL PRIVILEGES  ON DATABASE \"ots\" TO ots;'"
-    sudo su postgres -c "psql -d ots -c 'GRANT ALL ON SCHEMA public TO ots;'"
-  else
-    POSTGRESQL_PASSWORD=$(cat ~/ots/config.yml | awk 'match($0, /\/\/.*:(.*)@/, a) {print a[1]}')
-  fi
+    if [ "$OTS_USER_EXISTS" != 1 ];
+    then
+      echo "${GREEN}Creating ots database and user in PostgreSQL${NC}"
+      POSTGRESQL_PASSWORD=$(tr -dc 'A-Za-z0-9!?%=' < /dev/urandom | head -c 20)
+      sudo su postgres -c "psql -c 'create database ots;'"
+      sudo su postgres -c "psql -c \"create role ots with login password '${POSTGRESQL_PASSWORD}';\""
+      sudo su postgres -c "psql -c 'GRANT ALL PRIVILEGES  ON DATABASE \"ots\" TO ots;'"
+      sudo su postgres -c "psql -d ots -c 'GRANT ALL ON SCHEMA public TO ots;'"
+    else
+      POSTGRESQL_PASSWORD=$(cat ~/ots/config.yml | awk 'match($0, /\/\/.*:(.*)@/, a) {print a[1]}')
+    fi
 
-  sed -i "s/SQLALCHEMY_DATABASE_URI/\#SQLALCHEMY_DATABASE_URI/g" ~/ots/config.yml
-  echo "SQLALCHEMY_DATABASE_URI: postgresql+psycopg://ots:${POSTGRESQL_PASSWORD}@127.0.0.1/ots" >> ~/ots/config.yml
+    sed -i "s/SQLALCHEMY_DATABASE_URI/\#SQLALCHEMY_DATABASE_URI/g" ~/ots/config.yml
+    echo "SQLALCHEMY_DATABASE_URI: postgresql+psycopg://ots:${POSTGRESQL_PASSWORD}@127.0.0.1/ots" >> ~/ots/config.yml
 
-  cd ~/.opentakserver_venv/lib/python3.1*/site-packages/opentakserver
-  ~/.opentakserver_venv/bin/flask db upgrade
+    cd ~/.opentakserver_venv/lib/python3.1*/site-packages/opentakserver
+    ~/.opentakserver_venv/bin/flask db upgrade
 
-  # Use pgloader to import the old data
-  tee ${INSTALLER_DIR}/db.load >/dev/null << EOF
+    echo "${GREEN}Import SQLite DB...${NC}"
+    # Use pgloader to import the old data
+    tee ${INSTALLER_DIR}/db.load >/dev/null << EOF
 load database
      from sqlite:///${INSTALLER_DIR}/ots.db
      into pgsql://ots:${POSTGRESQL_PASSWORD}@127.0.0.1/ots
@@ -140,7 +143,15 @@ load database
  excluding table names like 'alembic_version';
 EOF
 
-  sudo su postgres -c "pgloader ${INSTALLER_DIR}/db.load"
+    sudo su postgres -c "pgloader ${INSTALLER_DIR}/db.load"
+  else
+    echo "${GREEN}Backing up DB...${NC}"
+    sudo su postgres -c "pg_dump ots" > ~/ots/ots_backup.db
+    echo "${GREEN}Upgrading DB...${NC}"
+    cd ~/.opentakserver_venv/lib/python3.1*/site-packages/opentakserver
+    ~/.opentakserver_venv/bin/flask db upgrade
+    cd $INSTALLER_DIR
+  fi
 
   echo "${GREEN}Upgrading UI...${NC}"
   rm -fr /var/www/html/opentakserver/*
@@ -154,32 +165,33 @@ elif [[ "$LATEST_MAJOR" -ne "$INSTALLED_MAJOR" || "$LATEST_MINOR" -ne "$INSTALLE
   echo "${GREEN}Upgrading OpenTAKServer to version ${LATEST_OTS_VERSION}${NC}"
   ~/.opentakserver_venv/bin/pip install opentakserver -U
 
-  echo "${GREEN}Upgrading database schema...${NC}"
-  sudo apt install postgresql-postgis pgloader
+  if [ "$(grep postgresql ~/ots/config.yml)" -ne 0 ]; then
+      echo "${GREEN}Migrating from SQLite to PostgreSQL...${NC}"
+      sudo apt install postgresql-postgis pgloader
 
-  # Check of Postgres user ots exists
-  OTS_USER_EXISTS=$(sudo su postgres -c "psql -tXAc \"SELECT 1 from pg_roles WHERE rolname='ots'\"")
+      # Check of Postgres user ots exists
+      OTS_USER_EXISTS=$(sudo su postgres -c "psql -tXAc \"SELECT 1 from pg_roles WHERE rolname='ots'\"")
 
-  if [ "$OTS_USER_EXISTS" != 1 ];
-  then
-    echo "${GREEN}Creating ots database and user in PostgreSQL${NC}"
-    POSTGRESQL_PASSWORD=$(tr -dc 'A-Za-z0-9!?%=' < /dev/urandom | head -c 20)
-    sudo su postgres -c "psql -c 'create database ots;'"
-    sudo su postgres -c "psql -c \"create role ots with login password '${POSTGRESQL_PASSWORD}';\""
-    sudo su postgres -c "psql -c 'GRANT ALL PRIVILEGES  ON DATABASE \"ots\" TO ots;'"
-    sudo su postgres -c "psql -d ots -c 'GRANT ALL ON SCHEMA public TO ots;'"
-  else
-    POSTGRESQL_PASSWORD=$(cat ~/ots/config.yml | awk 'match($0, /\/\/.*:(.*)@/, a) {print a[1]}')
-  fi
+      if [ "$OTS_USER_EXISTS" != 1 ];
+      then
+        echo "${GREEN}Creating ots database and user in PostgreSQL${NC}"
+        POSTGRESQL_PASSWORD=$(tr -dc 'A-Za-z0-9!?%=' < /dev/urandom | head -c 20)
+        sudo su postgres -c "psql -c 'create database ots;'"
+        sudo su postgres -c "psql -c \"create role ots with login password '${POSTGRESQL_PASSWORD}';\""
+        sudo su postgres -c "psql -c 'GRANT ALL PRIVILEGES  ON DATABASE \"ots\" TO ots;'"
+        sudo su postgres -c "psql -d ots -c 'GRANT ALL ON SCHEMA public TO ots;'"
+      else
+        POSTGRESQL_PASSWORD=$(cat ~/ots/config.yml | awk 'match($0, /\/\/.*:(.*)@/, a) {print a[1]}')
+      fi
 
-  sed -i "s/SQLALCHEMY_DATABASE_URI/\#SQLALCHEMY_DATABASE_URI/g" ~/ots/config.yml
-  echo "SQLALCHEMY_DATABASE_URI: postgresql+psycopg://ots:${POSTGRESQL_PASSWORD}@127.0.0.1/ots" >> ~/ots/config.yml
+      sed -i "s/SQLALCHEMY_DATABASE_URI/\#SQLALCHEMY_DATABASE_URI/g" ~/ots/config.yml
+      echo "SQLALCHEMY_DATABASE_URI: postgresql+psycopg://ots:${POSTGRESQL_PASSWORD}@127.0.0.1/ots" >> ~/ots/config.yml
 
-  cd ~/.opentakserver_venv/lib/python3.1*/site-packages/opentakserver
-  ~/.opentakserver_venv/bin/flask db upgrade
+      cd ~/.opentakserver_venv/lib/python3.1*/site-packages/opentakserver
+      ~/.opentakserver_venv/bin/flask db upgrade
 
-  # Use pgloader to import the old data
-  tee ${INSTALLER_DIR}/db.load >/dev/null << EOF
+      # Use pgloader to import the old data
+      tee ${INSTALLER_DIR}/db.load >/dev/null << EOF
 load database
      from sqlite:///${HOME}/ots/ots.db
      into pgsql://ots:${POSTGRESQL_PASSWORD}@127.0.0.1/ots
@@ -188,7 +200,15 @@ load database
  excluding table names like 'alembic_version';
 EOF
 
-  sudo su postgres -c "pgloader ${INSTALLER_DIR}/db.load"
+      sudo su postgres -c "pgloader ${INSTALLER_DIR}/db.load"
+  else
+    echo "${GREEN}Backing up DB...${NC}"
+    sudo su postgres -c "pg_dump ots" > ~/ots/ots_backup.db
+    echo "${GREEN}Upgrading DB...${NC}"
+    cd ~/.opentakserver_venv/lib/python3.1*/site-packages/opentakserver
+    ~/.opentakserver_venv/bin/flask db upgrade
+    cd $INSTALLER_DIR
+  fi
 
   echo "${GREEN}Upgrading UI...${NC}"
   rm -fr /var/www/html/opentakserver/*
