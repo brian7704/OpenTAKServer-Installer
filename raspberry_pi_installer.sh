@@ -161,7 +161,7 @@ KERNEL_BITS=$(getconf LONG_BIT)
 if [ "$KERNEL_BITS" == 32 ]; then
   lastversion --filter '~*linux_armv7' --assets download bluenviron/mediamtx -o ~/ots/mediamtx --only 1.13.0
 elif [ "$KERNEL_BITS" == 64 ]; then
-  lastversion --filter '~*linux_arm64v8' --assets download bluenviron/mediamtx -o ~/ots/mediamtx --only 1.13.0
+  lastversion --filter '~*linux_arm64' --assets download bluenviron/mediamtx -o ~/ots/mediamtx --only 1.13.0
 fi
 
 cd ~/ots/mediamtx
