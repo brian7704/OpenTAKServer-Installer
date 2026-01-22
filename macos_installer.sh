@@ -1,10 +1,18 @@
 #!/bin/bash
 
+# Load .env file if it exists
+if [ -f .env ]; then
+    export $(grep -v '^#' .env | xargs)
+fi
+
+# Set default values for environment variables
+OTS_GITHUB_USER="${OTS_GITHUB_USER:-brian7704}"
+
 INSTALLER_DIR=/tmp/ots_installer
 mkdir -p $INSTALLER_DIR
 cd $INSTALLER_DIR
 
-curl -sL https://github.com/brian7704/OpenTAKServer-Installer/raw/master/colors.sh -o "$INSTALLER_DIR"/colors.sh
+curl -sL https://github.com/${OTS_GITHUB_USER}/OpenTAKServer-Installer/raw/master/colors.sh -o "$INSTALLER_DIR"/colors.sh
 . "$INSTALLER_DIR"/colors.sh
 
 echo "${GREEN}
@@ -58,10 +66,10 @@ echo "${GREEN}Installing prerequisites via brew...${NC}"
 # Without the echo "", brew install causes the rest of the script to fail https://github.com/Homebrew/homebrew-core/issues/141712
 echo "" | brew install rabbitmq python@3.12 nginx ffmpeg mediamtx
 
-sudo curl -sL https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/refs/heads/master/macos_configs/launchd.opentakserver.plist -o /Library/LaunchDaemons/launchd.opentakserver.plist
-sudo curl -sL https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/refs/heads/master/macos_configs/homebrew.mxcl.mediamtx.plist -o /Library/LaunchDaemons/homebrew.mxcl.mediamtx.plist
-sudo curl -sL https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/refs/heads/master/macos_configs/homebrew.mxcl.nginx.plist -o /Library/LaunchDaemons/homebrew.mxcl.nginx.plist
-sudo curl -sL https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/refs/heads/master/macos_configs/homebrew.mxcl.rabbitmq.plist -o /Library/LaunchDaemons/homebrew.mxcl.rabbitmq.plist
+sudo curl -sL https://raw.githubusercontent.com/${OTS_GITHUB_USER}/OpenTAKServer-Installer/refs/heads/master/macos_configs/launchd.opentakserver.plist -o /Library/LaunchDaemons/launchd.opentakserver.plist
+sudo curl -sL https://raw.githubusercontent.com/${OTS_GITHUB_USER}/OpenTAKServer-Installer/refs/heads/master/macos_configs/homebrew.mxcl.mediamtx.plist -o /Library/LaunchDaemons/homebrew.mxcl.mediamtx.plist
+sudo curl -sL https://raw.githubusercontent.com/${OTS_GITHUB_USER}/OpenTAKServer-Installer/refs/heads/master/macos_configs/homebrew.mxcl.nginx.plist -o /Library/LaunchDaemons/homebrew.mxcl.nginx.plist
+sudo curl -sL https://raw.githubusercontent.com/${OTS_GITHUB_USER}/OpenTAKServer-Installer/refs/heads/master/macos_configs/homebrew.mxcl.rabbitmq.plist -o /Library/LaunchDaemons/homebrew.mxcl.rabbitmq.plist
 
 sudo sed -i '' "s/USERNAME/${USERNAME}/g" /Library/LaunchDaemons/homebrew.mxcl.rabbitmq.plist
 sudo sed -i '' "s/USERNAME/${USERNAME}/g" /Library/LaunchDaemons/homebrew.mxcl.nginx.plist
@@ -79,7 +87,7 @@ mkdir -p ~/ots/mediamtx/recordings
 ln -s /opt/homebrew/etc/mediamtx/mediamtx.yml ~/ots/mediamtx/mediamtx.yml
 
 cd ~/ots/mediamtx
-curl -sL https://github.com/brian7704/OpenTAKServer-Installer/raw/master/mediamtx.yml -o /opt/homebrew/etc/mediamtx/mediamtx.yml
+curl -sL https://github.com/${OTS_GITHUB_USER}/OpenTAKServer-Installer/raw/master/mediamtx.yml -o /opt/homebrew/etc/mediamtx/mediamtx.yml
 sed -i '' "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.pem~g" /opt/homebrew/etc/mediamtx/mediamtx.yml
 sed -i '' "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.nopass.key~g" /opt/homebrew/etc/mediamtx/mediamtx.yml
 sed -i '' "s~OTS_FOLDER~${HOME}/ots~g" /opt/homebrew/etc/mediamtx/mediamtx.yml
@@ -89,12 +97,12 @@ sudo launchctl load -w /Library/LaunchDaemons/homebrew.mxcl.mediamtx.plist
 echo "${GREEN}Configuring nginx...${NC}"
 mkdir -p /opt/homebrew/etc/nginx/streams
 rm /opt/homebrew/etc/nginx/nginx.conf
-curl -sL https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/refs/heads/master/macos_configs/nginx.conf -o /opt/homebrew/etc/nginx/nginx.conf
-curl -sL https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/nginx_configs/rabbitmq -o /opt/homebrew/etc/nginx/streams/rabbitmq
-curl -sL https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/refs/heads/master/nginx_configs/mediamtx -o /opt/homebrew/etc/nginx/streams/mediamtx
-curl -sL https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/refs/heads/master/nginx_configs/ots_certificate_enrollment -o /opt/homebrew/etc/nginx/servers/ots_certificate_enrollment
-curl -sL https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/refs/heads/master/nginx_configs/ots_http -o /opt/homebrew/etc/nginx/servers/ots_http
-curl -sL https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/refs/heads/master/nginx_configs/ots_https -o /opt/homebrew/etc/nginx/servers/ots_https
+curl -sL https://raw.githubusercontent.com/${OTS_GITHUB_USER}/OpenTAKServer-Installer/refs/heads/master/macos_configs/nginx.conf -o /opt/homebrew/etc/nginx/nginx.conf
+curl -sL https://raw.githubusercontent.com/${OTS_GITHUB_USER}/OpenTAKServer-Installer/master/nginx_configs/rabbitmq -o /opt/homebrew/etc/nginx/streams/rabbitmq
+curl -sL https://raw.githubusercontent.com/${OTS_GITHUB_USER}/OpenTAKServer-Installer/refs/heads/master/nginx_configs/mediamtx -o /opt/homebrew/etc/nginx/streams/mediamtx
+curl -sL https://raw.githubusercontent.com/${OTS_GITHUB_USER}/OpenTAKServer-Installer/refs/heads/master/nginx_configs/ots_certificate_enrollment -o /opt/homebrew/etc/nginx/servers/ots_certificate_enrollment
+curl -sL https://raw.githubusercontent.com/${OTS_GITHUB_USER}/OpenTAKServer-Installer/refs/heads/master/nginx_configs/ots_http -o /opt/homebrew/etc/nginx/servers/ots_http
+curl -sL https://raw.githubusercontent.com/${OTS_GITHUB_USER}/OpenTAKServer-Installer/refs/heads/master/nginx_configs/ots_https -o /opt/homebrew/etc/nginx/servers/ots_https
 
 sed -i '' "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.pem~g" /opt/homebrew/etc/nginx/servers/ots_https
 sed -i '' "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.pem~g" /opt/homebrew/etc/nginx/servers/ots_certificate_enrollment
@@ -140,7 +148,7 @@ source "$HOME"/.opentakserver_venv/bin/activate
 pip3.12 install opentakserver
 mkdir -p /opt/homebrew/var/www/opentakserver
 cd /opt/homebrew/var/www/opentakserver
-lastversion --assets extract brian7704/OpenTAKServer-UI
+lastversion --assets extract ${OTS_GITHUB_USER}/OpenTAKServer-UI
 echo "${GREEN}OpenTAKServer Installed!${NC}"
 
 echo "${GREEN}Initializing Database...${NC}"

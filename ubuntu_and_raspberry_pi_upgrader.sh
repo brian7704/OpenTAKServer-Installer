@@ -47,11 +47,19 @@ while [[ $# -gt 0 ]]; do
     shift
 done
 
+# Load .env file if it exists
+if [ -f .env ]; then
+    export $(grep -v '^#' .env | xargs)
+fi
+
+# Set default values for environment variables
+OTS_GITHUB_USER="${OTS_GITHUB_USER:-brian7704}"
+
 INSTALLER_DIR=/tmp/ots_installer
 mkdir -p $INSTALLER_DIR
 cd $INSTALLER_DIR
 
-wget https://github.com/brian7704/OpenTAKServer-Installer/raw/master/colors.sh -qO "$INSTALLER_DIR"/colors.sh
+wget https://github.com/${OTS_GITHUB_USER}/OpenTAKServer-Installer/raw/master/colors.sh -qO "$INSTALLER_DIR"/colors.sh
 . "$INSTALLER_DIR"/colors.sh
 
 if [[ "$BLEEDING_EDGE" -gt 0 ]]; then
@@ -96,7 +104,7 @@ LATEST_MINOR=${VERSION_ARRAY[1]}
 LATEST_PATCH=${VERSION_ARRAY[2]}
 
 if [[ "$BLEEDING_EDGE" -eq 1 ]]; then
-  GIT_URL=git+https://github.com/brian7704/OpenTAKServer.git
+  GIT_URL=git+https://github.com/${OTS_GITHUB_USER}/OpenTAKServer.git
   read -p "${GREEN}What branch would you like to install from? [master]${NC} " BRANCH < /dev/tty
   if [ -n "$BRANCH" ]; then
     echo "Installing from the ${BRANCH} branch..."
@@ -156,7 +164,7 @@ EOF
   echo "${GREEN}Upgrading UI...${NC}"
   rm -fr /var/www/html/opentakserver/*
   cd /var/www/html/opentakserver/
-  ~/.opentakserver_venv/bin/lastversion --pre --assets extract brian7704/OpenTAKServer-UI
+  ~/.opentakserver_venv/bin/lastversion --pre --assets extract ${OTS_GITHUB_USER}/OpenTAKServer-UI
 
   echo "${GREEN}Restarting the OpenTAKServer service. Please enter your sudo password if prompted${NC}"
   sudo systemctl restart opentakserver
@@ -213,7 +221,7 @@ EOF
   echo "${GREEN}Upgrading UI...${NC}"
   rm -fr /var/www/html/opentakserver/*
   cd /var/www/html/opentakserver/
-  ~/.opentakserver_venv/bin/lastversion --assets extract brian7704/OpenTAKServer-UI
+  ~/.opentakserver_venv/bin/lastversion --assets extract ${OTS_GITHUB_USER}/OpenTAKServer-UI
 
   echo "${GREEN}Restarting the OpenTAKServer service. Please enter your sudo password if prompted${NC}"
   sudo systemctl restart opentakserver
@@ -348,7 +356,7 @@ fi
 sudo ls /etc/rabbitmq/rabbitmq.conf &> /dev/null
 if [[ $? -ne 0 ]]; then
   echo "${GREEN}Enabling MQTT support in RabbitMQ${NC}"
-  sudo wget https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/rabbitmq.conf -O /etc/rabbitmq/rabbitmq.conf
+  sudo wget https://raw.githubusercontent.com/${OTS_GITHUB_USER}/OpenTAKServer-Installer/master/rabbitmq.conf -O /etc/rabbitmq/rabbitmq.conf
   # The following lines all end in "; \" because rabbitmq-plugins stops the script, even when it's successful
   # Adding "; \" is a janky fix to make the rest of the script work
   sudo rabbitmq-plugins enable rabbitmq_mqtt rabbitmq_auth_backend_http ; \

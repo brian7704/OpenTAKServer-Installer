@@ -1,10 +1,18 @@
 #!/bin/bash
 
+# Load .env file if it exists
+if [ -f .env ]; then
+    export $(grep -v '^#' .env | xargs)
+fi
+
+# Set default values for environment variables
+OTS_GITHUB_USER="${OTS_GITHUB_USER:-brian7704}"
+
 INSTALLER_DIR=/tmp/ots_installer
 mkdir -p $INSTALLER_DIR
 cd $INSTALLER_DIR
 
-wget https://github.com/brian7704/OpenTAKServer-Installer/raw/master/colors.sh -qO "$INSTALLER_DIR"/colors.sh
+wget https://github.com/${OTS_GITHUB_USER}/OpenTAKServer-Installer/raw/master/colors.sh -qO "$INSTALLER_DIR"/colors.sh
 . "$INSTALLER_DIR"/colors.sh
 
 . /etc/os-release

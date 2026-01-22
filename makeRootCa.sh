@@ -3,9 +3,17 @@
 #  Optionally, you may also edit config.cfg, although unless you know what
 #  you are doing, you probably shouldn't.
 
+# Load .env file if it exists
+if [ -f .env ]; then
+    export $(grep -v '^#' .env | xargs)
+fi
+
+# Set default values for environment variables
+OTS_GITHUB_USER="${OTS_GITHUB_USER:-brian7704}"
+
 INSTALLER_DIR=/tmp/ots_installer
 
-wget https://github.com/brian7704/OpenTAKServer-Installer/raw/master/cert-metadata.sh -qO "$INSTALLER_DIR"/cert-metadata.sh
+wget https://github.com/${OTS_GITHUB_USER}/OpenTAKServer-Installer/raw/master/cert-metadata.sh -qO "$INSTALLER_DIR"/cert-metadata.sh
 . "$INSTALLER_DIR"/cert-metadata.sh
 
 mkdir -p "$DIR"
