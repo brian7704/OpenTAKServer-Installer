@@ -7,6 +7,7 @@ fi
 
 # Set default values for environment variables
 OTS_GITHUB_USER="${OTS_GITHUB_USER:-brian7704}"
+OTS_HOME="${OTS_HOME:-$HOME/ots}"
 
 INSTALLER_DIR=/tmp/ots_installer
 mkdir -p $INSTALLER_DIR
@@ -34,7 +35,9 @@ OTS_USER_EXISTS=$(sudo su postgres -c "psql -tXAc \"SELECT 1 from pg_roles WHERE
 if [ "$OTS_USER_EXISTS" != 1 ];
 then
   echo "${GREEN}Creating ots database and user in PostgreSQL${NC}"
-  POSTGRESQL_PASSWORD=$(tr -dc 'A-Za-z0-9!?%=' < /dev/urandom | head -c 20)
+  if [ -z "$POSTGRESQL_PASSWORD" ]; then
+    POSTGRESQL_PASSWORD=$(tr -dc 'A-Za-z0-9!?%=' < /dev/urandom | head -c 20)
+  fi
   sudo su postgres -c "psql -c \"create role ots with login password '${POSTGRESQL_PASSWORD}';\""
   sudo su postgres -c "psql -c 'create database ots;'"
   sudo su postgres -c "psql -c 'GRANT ALL PRIVILEGES  ON DATABASE \"ots\" TO ots;'"
@@ -45,13 +48,13 @@ then
   flask ots generate-config
   cd "$INSTALLER_DIR"
 
-  sed -i "s/SQLALCHEMY_DATABASE_URI/\#SQLALCHEMY_DATABASE_URI/g" ~/ots/config.yml
-  echo "SQLALCHEMY_DATABASE_URI: postgresql+psycopg://ots:${POSTGRESQL_PASSWORD}@127.0.0.1/ots" >> ~/ots/config.yml
+  sed -i "s/SQLALCHEMY_DATABASE_URI/\#SQLALCHEMY_DATABASE_URI/g" "${OTS_HOME}"/config.yml
+  echo "SQLALCHEMY_DATABASE_URI: postgresql+psycopg://ots:${POSTGRESQL_PASSWORD}@127.0.0.1/ots" >> "${OTS_HOME}"/config.yml
 else
-  POSTGRESQL_PASSWORD=$(cat ~/ots/config.yml | awk 'match($0, /\/\/.*:(.*)@/, a) {print a[1]}')
+  POSTGRESQL_PASSWORD=$(cat "${OTS_HOME}"/config.yml | awk 'match($0, /\/\/.*:(.*)@/, a) {print a[1]}')
 fi
 
-cp ~/ots/ots.db $INSTALLER_DIR
+cp "${OTS_HOME}"/ots.db $INSTALLER_DIR
 chmod a+r ${INSTALLER_DIR}/ots.db
 
 # Use Flask-Migrate to make a new blank DB

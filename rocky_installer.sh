@@ -7,6 +7,10 @@ fi
 
 # Set default values for environment variables
 OTS_GITHUB_USER="${OTS_GITHUB_USER:-brian7704}"
+OTS_DEV_MODE="${OTS_DEV_MODE:-0}"
+OTS_DEV_PATH="${OTS_DEV_PATH:-../OpenTAKServer}"
+OTS_HOME="${OTS_HOME:-$HOME/ots}"
+OTS_BASE="${OTS_BASE:-}"
 
 INSTALLER_DIR=/tmp/ots_installer
 mkdir -p $INSTALLER_DIR
@@ -56,7 +60,7 @@ then
   exit 1
 fi
 
-mkdir -p ~/ots
+mkdir -p "${OTS_HOME}"
 
 echo "${GREEN}Installing packages via dnf. You may be prompted for your sudo password...${NC}"
 
@@ -191,14 +195,25 @@ sudo systemctl start rabbitmq-server
 echo "${GREEN} Installing OpenTAKServer from PyPI...${NC}"
 python3.12 -m venv --system-site-packages ~/.opentakserver_venv
 source "$HOME"/.opentakserver_venv/bin/activate
-pip3.12 install opentakserver
+
+if [ "$OTS_DEV_MODE" == "1" ] && [ -d "$OTS_DEV_PATH" ]; then
+  echo "${YELLOW}Development mode: Installing from local path ${OTS_DEV_PATH}${NC}"
+  pip3.12 install -e "$OTS_DEV_PATH"
+else
+  pip3.12 install opentakserver
+fi
+
 # Configure SELinux to allow OpenTAKServer to be launched by systemd
 sudo semanage fcontext -a -t bin_t "$HOME/.opentakserver_venv/bin(/.*)?"
 restorecon -r -v "$HOME"/.opentakserver_venv/bin
 echo "${GREEN}OpenTAKServer Installed!${NC}"
 
 echo "${GREEN}Initializing Database...${NC}"
-cd "$HOME"/.opentakserver_venv/lib/python3.12/site-packages/opentakserver
+if [ "$OTS_DEV_MODE" == "1" ] && [ -d "$OTS_DEV_PATH" ]; then
+  cd "$OTS_DEV_PATH"/opentakserver
+else
+  cd "$HOME"/.opentakserver_venv/lib/python3.12/site-packages/opentakserver
+fi
 flask db upgrade
 cd "$INSTALLER_DIR"
 echo "${GREEN}Finished initializing database!${NC}"
@@ -243,19 +258,23 @@ fi
 
 echo "${GREEN}Creating certificate authority...${NC}"
 
-mkdir -p ~/ots/ca
+mkdir -p "${OTS_HOME}"/ca
 curl -L -s -o "$INSTALLER_DIR"/config.cfg https://github.com/${OTS_GITHUB_USER}/OpenTAKServer-Installer/raw/master/config.cfg
-cp "$INSTALLER_DIR"/config.cfg ~/ots/ca/ca_config.cfg
+cp "$INSTALLER_DIR"/config.cfg "${OTS_HOME}"/ca/ca_config.cfg
 
 # Generate CA
-cd ~/.opentakserver_venv/lib/python3.12/site-packages/opentakserver
+if [ "$OTS_DEV_MODE" == "1" ] && [ -d "$OTS_DEV_PATH" ]; then
+  cd "$OTS_DEV_PATH"/opentakserver
+else
+  cd ~/.opentakserver_venv/lib/python3.12/site-packages/opentakserver
+fi
 ~/.opentakserver_venv/bin/flask ots create-ca
 cd "$INSTALLER_DIR"
 
 echo "${GREEN}Installing mediamtx...${NC}"
-mkdir -p ~/ots/mediamtx/recordings
+mkdir -p "${OTS_HOME}"/mediamtx/recordings
 
-cd ~/ots/mediamtx
+cd "${OTS_HOME}"/mediamtx
 
 ARCH=$(uname -m)
 KERNEL_BITS=$(getconf LONG_BIT)
@@ -268,7 +287,7 @@ elif [ "$KERNEL_BITS" == 64 ]; then
 fi
 
 tar -xf ./*.tar.gz
-curl -L -s -o ~/ots/mediamtx/mediamtx.yml https://github.com/${OTS_GITHUB_USER}/OpenTAKServer-Installer/raw/master/mediamtx.yml
+curl -L -s -o "${OTS_HOME}"/mediamtx/mediamtx.yml https://github.com/${OTS_GITHUB_USER}/OpenTAKServer-Installer/raw/master/mediamtx.yml
 
 sudo tee /etc/systemd/system/mediamtx.service >/dev/null << EOF
 [Unit]
@@ -280,9 +299,10 @@ ExecStart=$HOME/ots/mediamtx/mediamtx $HOME/ots/mediamtx/mediamtx.yml
 WantedBy=multi-user.target
 EOF
 
-sudo sed -i "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.pem~g" ~/ots/mediamtx/mediamtx.yml
-sudo sed -i "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.nopass.key~g" ~/ots/mediamtx/mediamtx.yml
-sudo sed -i "s~OTS_FOLDER~${HOME}/ots~g" ~/ots/mediamtx/mediamtx.yml
+sudo sed -i "s~SERVER_CERT_FILE~${OTS_HOME}/ca/certs/opentakserver/opentakserver.pem~g" "${OTS_HOME}"/mediamtx/mediamtx.yml
+sudo sed -i "s~SERVER_KEY_FILE~${OTS_HOME}/ca/certs/opentakserver/opentakserver.nopass.key~g" "${OTS_HOME}"/mediamtx/mediamtx.yml
+sudo sed -i "s~OTS_FOLDER~${OTS_HOME}~g" "${OTS_HOME}"/mediamtx/mediamtx.yml
+sudo sed -i "s~OTS_BASE~${OTS_BASE}~g" "${OTS_HOME}"/mediamtx/mediamtx.yml
 
 # Configure SELinux to allow MediaMTX to start via systemd
 sudo semanage fcontext -a -t bin_t "$HOME"/ots/mediamtx/mediamtx
@@ -460,6 +480,7 @@ sudo systemctl start eud_handler_ssl
 
 echo "${GREEN}Configuring RabbitMQ...${NC}"
 sudo curl -L -s -o /etc/rabbitmq/rabbitmq.conf https://raw.githubusercontent.com/${OTS_GITHUB_USER}/OpenTAKServer-Installer/master/rabbitmq.conf
+sudo sed -i "s~OTS_BASE~${OTS_BASE}~g" /etc/rabbitmq/rabbitmq.conf
 
 # The following lines all end in "; \" because rabbitmq-plugins stops the script, even when it's successful
 # Adding "; \" is a janky fix to make the rest of the script work

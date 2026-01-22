@@ -17,7 +17,8 @@ CAPASS=${CAPASS:-atakatak}
 PASS=${PASS:-$CAPASS}
 
 ## subdirectory to put all the actual certs and keys in
-DIR=~/ots/ca/
+OTS_HOME="${OTS_HOME:-$HOME/ots}"
+DIR="${OTS_HOME}"/ca/
 
 ##### don't edit below this line #####
 

@@ -7,6 +7,10 @@ fi
 
 # Set default values for environment variables
 OTS_GITHUB_USER="${OTS_GITHUB_USER:-brian7704}"
+OTS_DEV_MODE="${OTS_DEV_MODE:-0}"
+OTS_DEV_PATH="${OTS_DEV_PATH:-../OpenTAKServer}"
+OTS_HOME="${OTS_HOME:-$HOME/ots}"
+OTS_BASE="${OTS_BASE:-}"
 
 INSTALLER_DIR=/tmp/ots_installer
 mkdir -p $INSTALLER_DIR
@@ -32,7 +36,7 @@ then
   exit 1
 fi
 
-mkdir -p ~/ots
+mkdir -p "${OTS_HOME}"
 
 echo "${GREEN}Installing packages via apt. You may be prompted for your sudo password...${NC}"
 
@@ -43,9 +47,16 @@ echo "${GREEN} Installing OpenTAKServer from PyPI...${NC}"
 python3 -m venv --system-site-packages ~/.opentakserver_venv
 source "$HOME"/.opentakserver_venv/bin/activate
 python3 -m pip install --upgrade pip setuptools wheel
-pip3 install opentakserver
 
-cd "$HOME"/.opentakserver_venv/lib/python3.*/site-packages/opentakserver
+if [ "$OTS_DEV_MODE" == "1" ] && [ -d "$OTS_DEV_PATH" ]; then
+  echo "${YELLOW}Development mode: Installing from local path ${OTS_DEV_PATH}${NC}"
+  pip3 install -e "$OTS_DEV_PATH"
+  cd "$OTS_DEV_PATH"/opentakserver
+else
+  pip3 install opentakserver
+  cd "$HOME"/.opentakserver_venv/lib/python3.*/site-packages/opentakserver
+fi
+
 # This command won't overwrite config.yml if it exists
 flask ots generate-config
 
@@ -60,12 +71,16 @@ OTS_USER_EXISTS=$(sudo su postgres -c "psql -tXAc \"SELECT 1 from pg_roles WHERE
 if [ "$OTS_USER_EXISTS" != 1 ];
 then
   echo "${GREEN}Creating ots user in PostgreSQL${NC}"
-  POSTGRESQL_PASSWORD=$(tr -dc 'A-Za-z0-9!?%=' < /dev/urandom | head -c 20)
+  if [ -z "$POSTGRESQL_PASSWORD" ]; then
+    POSTGRESQL_PASSWORD=$(tr -dc 'A-Za-z0-9!?%=' < /dev/urandom | head -c 20)
+  fi
   sudo su postgres -c "psql -c \"create role ots with login password '${POSTGRESQL_PASSWORD}';\""
-  sed -i "s/POSTGRESQL_PASSWORD/${POSTGRESQL_PASSWORD}/g" ~/ots/config.yml
+  sed -i "s/POSTGRESQL_PASSWORD/${POSTGRESQL_PASSWORD}/g" "${OTS_HOME}"/config.yml
 else
-  read -p "${GREEN}PostgreSQL user 'ots' already exists. Please provide its password: ${NC}" POSTGRESQL_PASSWORD < /dev/tty
-  sed -i "s/POSTGRESQL_PASSWORD/${POSTGRESQL_PASSWORD}/g" ~/ots/config.yml
+  if [ -z "$POSTGRESQL_PASSWORD" ]; then
+    read -p "${GREEN}PostgreSQL user 'ots' already exists. Please provide its password: ${NC}" POSTGRESQL_PASSWORD < /dev/tty
+  fi
+  sed -i "s/POSTGRESQL_PASSWORD/${POSTGRESQL_PASSWORD}/g" "${OTS_HOME}"/config.yml
 fi
 
 if [ "$OTS_DB_EXISTS" != 1 ];
@@ -77,7 +92,11 @@ fi
 sudo su postgres -c "psql -c 'GRANT ALL PRIVILEGES  ON DATABASE \"ots\" TO ots;'"
 sudo su postgres -c "psql -d ots -c 'GRANT ALL ON SCHEMA public TO ots;'"
 
-cd "$HOME"/.opentakserver_venv/lib/python3.*/site-packages/opentakserver
+if [ "$OTS_DEV_MODE" == "1" ] && [ -d "$OTS_DEV_PATH" ]; then
+  cd "$OTS_DEV_PATH"/opentakserver
+else
+  cd "$HOME"/.opentakserver_venv/lib/python3.*/site-packages/opentakserver
+fi
 flask db upgrade
 cd "$INSTALLER_DIR"
 echo "${GREEN}Finished initializing database!${NC}"
@@ -150,16 +169,20 @@ fi
 
 echo "${GREEN}Creating certificate authority...${NC}"
 
-mkdir -p ~/ots/ca
+mkdir -p "${OTS_HOME}"/ca
 
 # Generate CA
-cd "$HOME"/.opentakserver_venv/lib/python3.*/site-packages/opentakserver
+if [ "$OTS_DEV_MODE" == "1" ] && [ -d "$OTS_DEV_PATH" ]; then
+  cd "$OTS_DEV_PATH"/opentakserver
+else
+  cd "$HOME"/.opentakserver_venv/lib/python3.*/site-packages/opentakserver
+fi
 flask ots create-ca
 
 echo "${GREEN}Installing mediamtx...${NC}"
-mkdir -p ~/ots/mediamtx/recordings
+mkdir -p "${OTS_HOME}"/mediamtx/recordings
 
-cd ~/ots/mediamtx
+cd "${OTS_HOME}"/mediamtx
 
 ARCH=$(uname -m)
 KERNEL_BITS=$(getconf LONG_BIT)
@@ -172,7 +195,7 @@ elif [ "$KERNEL_BITS" == 64 ]; then
 fi
 
 tar -xf ./*.tar.gz
-wget https://github.com/${OTS_GITHUB_USER}/OpenTAKServer-Installer/raw/master/mediamtx.yml -qO ~/ots/mediamtx/mediamtx.yml
+wget https://github.com/${OTS_GITHUB_USER}/OpenTAKServer-Installer/raw/master/mediamtx.yml -qO "${OTS_HOME}"/mediamtx/mediamtx.yml
 
 sudo tee /etc/systemd/system/mediamtx.service >/dev/null << EOF
 [Unit]
@@ -184,9 +207,10 @@ ExecStart=$HOME/ots/mediamtx/mediamtx $HOME/ots/mediamtx/mediamtx.yml
 WantedBy=multi-user.target
 EOF
 
-sudo sed -i "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.pem~g" ~/ots/mediamtx/mediamtx.yml
-sudo sed -i "s~SERVER_KEY_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.nopass.key~g" ~/ots/mediamtx/mediamtx.yml
-sudo sed -i "s~OTS_FOLDER~${HOME}/ots~g" ~/ots/mediamtx/mediamtx.yml
+sudo sed -i "s~SERVER_CERT_FILE~${OTS_HOME}/ca/certs/opentakserver/opentakserver.pem~g" "${OTS_HOME}"/mediamtx/mediamtx.yml
+sudo sed -i "s~SERVER_KEY_FILE~${OTS_HOME}/ca/certs/opentakserver/opentakserver.nopass.key~g" "${OTS_HOME}"/mediamtx/mediamtx.yml
+sudo sed -i "s~OTS_FOLDER~${OTS_HOME}~g" "${OTS_HOME}"/mediamtx/mediamtx.yml
+sudo sed -i "s~OTS_BASE~${OTS_BASE}~g" "${OTS_HOME}"/mediamtx/mediamtx.yml
 
 sudo systemctl daemon-reload
 sudo systemctl enable mediamtx
@@ -317,6 +341,7 @@ sudo systemctl start eud_handler_ssl
 
 echo "${GREEN}Configuring RabbitMQ...${NC}"
 sudo wget https://raw.githubusercontent.com/${OTS_GITHUB_USER}/OpenTAKServer-Installer/master/rabbitmq.conf -qO /etc/rabbitmq/rabbitmq.conf
+sudo sed -i "s~OTS_BASE~${OTS_BASE}~g" /etc/rabbitmq/rabbitmq.conf
 
 # On Ubuntu 25.04 and up the PLUGINS_DIR variable needs to be set in order to enable plugins
 IFS=" "

@@ -40,12 +40,12 @@ pprofAddress: :9999
 # * RTSP_PORT: RTSP server port
 # * MTX_CONN_TYPE: connection type
 # * MTX_CONN_ID: connection ID
-runOnConnect: curl -s http://localhost:8081/api/mediamtx/webhook?connection_type=$MTX_CONN_TYPE&connection_id=$MTX_CONN_ID&rtsp_port=$RTSP_PORT&event=connect&token=MTX_TOKEN > /dev/null
+runOnConnect: curl -s http://localhost:8081/OTS_BASE/api/mediamtx/webhook?connection_type=$MTX_CONN_TYPE&connection_id=$MTX_CONN_ID&rtsp_port=$RTSP_PORT&event=connect&token=MTX_TOKEN > /dev/null
 # Restart the command if it exits.
 runOnConnectRestart: no
 # Command to run when a client disconnects from the server.
 # Environment variables are the same of runOnConnect.
-runOnDisconnect: curl -s http://localhost:8081/api/mediamtx/webhook?connection_type=$MTX_CONN_TYPE&connection_id=$MTX_CONN_ID&rtsp_port=$RTSP_PORT&event=disconnect&token=MTX_TOKEN > /dev/null
+runOnDisconnect: curl -s http://localhost:8081/OTS_BASE/api/mediamtx/webhook?connection_type=$MTX_CONN_TYPE&connection_id=$MTX_CONN_ID&rtsp_port=$RTSP_PORT&event=disconnect&token=MTX_TOKEN > /dev/null
 
 ###############################################
 # Global settings -> Authentication
@@ -106,7 +106,7 @@ authInternalUsers:
 # }
 # If the response code is 20x, authentication is accepted, otherwise
 # it is discarded.
-authHTTPAddress: http://127.0.0.1:8081/api/external_auth
+authHTTPAddress: http://127.0.0.1:8081/OTS_BASE/api/external_auth
 # Actions to exclude from HTTP-based authentication.
 # Format is the same as the one of user permissions.
 authHTTPExclude:
@@ -563,12 +563,12 @@ pathDefaults:
   #   a regular expression.
   # * MTX_SOURCE_TYPE: source type
   # * MTX_SOURCE_ID: source ID
-  runOnReady: curl -s http://localhost:8081/api/mediamtx/webhook?rtsp_port=$RTSP_PORT&path=$MTX_PATH&query=$MTX_QUERY&source_type=$MTX_SOURCE_TYPE&source_id=$MTX_SOURCE_ID&event=ready&token=MTX_TOKEN > /dev/null
+  runOnReady: curl -s http://localhost:8081/OTS_BASE/api/mediamtx/webhook?rtsp_port=$RTSP_PORT&path=$MTX_PATH&query=$MTX_QUERY&source_type=$MTX_SOURCE_TYPE&source_id=$MTX_SOURCE_ID&event=ready&token=MTX_TOKEN > /dev/null
   # Restart the command if it exits.
   runOnReadyRestart: no
   # Command to run when the stream is not available anymore.
   # Environment variables are the same of runOnReady.
-  runOnNotReady: curl -s http://localhost:8081/api/mediamtx/webhook?rtsp_port=$RTSP_PORT&path=$MTX_PATH&query=$MTX_QUERY&source_type=$MTX_SOURCE_TYPE&source_id=$MTX_SOURCE_ID&event=notready&token=MTX_TOKEN > /dev/null
+  runOnNotReady: curl -s http://localhost:8081/OTS_BASE/api/mediamtx/webhook?rtsp_port=$RTSP_PORT&path=$MTX_PATH&query=$MTX_QUERY&source_type=$MTX_SOURCE_TYPE&source_id=$MTX_SOURCE_ID&event=notready&token=MTX_TOKEN > /dev/null
 
   # Command to run when a client starts reading.
   # This is terminated with SIGINT when a client stops reading.
@@ -580,12 +580,12 @@ pathDefaults:
   #   a regular expression.
   # * MTX_READER_TYPE: reader type
   # * MTX_READER_ID: reader ID
-  runOnRead: curl -s http://localhost:8081/api/mediamtx/webhook?rtsp_port=$RTSP_PORT&path=$MTX_PATH&query=$MTX_QUERY&reader_type=$MTX_READER_TYPE&reader_id=$MTX_READER_ID&event=read&token=MTX_TOKEN > /dev/null
+  runOnRead: curl -s http://localhost:8081/OTS_BASE/api/mediamtx/webhook?rtsp_port=$RTSP_PORT&path=$MTX_PATH&query=$MTX_QUERY&reader_type=$MTX_READER_TYPE&reader_id=$MTX_READER_ID&event=read&token=MTX_TOKEN > /dev/null
   # Restart the command if it exits.
   runOnReadRestart: no
   # Command to run when a client stops reading.
   # Environment variables are the same of runOnRead.
-  runOnUnread: curl -s http://localhost:8081/api/mediamtx/webhook?rtsp_port=$RTSP_PORT&path=$MTX_PATH&query=$MTX_QUERY&reader_type=$MTX_READER_TYPE&reader_id=$MTX_READER_ID&event=unread&token=MTX_TOKEN > /dev/null
+  runOnUnread: curl -s http://localhost:8081/OTS_BASE/api/mediamtx/webhook?rtsp_port=$RTSP_PORT&path=$MTX_PATH&query=$MTX_QUERY&reader_type=$MTX_READER_TYPE&reader_id=$MTX_READER_ID&event=unread&token=MTX_TOKEN > /dev/null
 
   # Command to run when a recording segment is created.
   # The following environment variables are available:
@@ -594,7 +594,7 @@ pathDefaults:
   # * G1, G2, ...: regular expression groups, if path name is
   #   a regular expression.
   # * MTX_SEGMENT_PATH: segment file path
-  runOnRecordSegmentCreate: curl -s http://localhost:8081/api/mediamtx/webhook?path=$MTX_PATH&rtsp_port=$RTSP_PORT&segment_path=$MTX_SEGMENT_PATH&event=segment_record&token=MTX_TOKEN > /dev/null
+  runOnRecordSegmentCreate: curl -s http://localhost:8081/OTS_BASE/api/mediamtx/webhook?path=$MTX_PATH&rtsp_port=$RTSP_PORT&segment_path=$MTX_SEGMENT_PATH&event=segment_record&token=MTX_TOKEN > /dev/null
 
   # Command to run when a recording segment is complete.
   # The following environment variables are available:
@@ -603,7 +603,7 @@ pathDefaults:
   # * G1, G2, ...: regular expression groups, if path name is
   #   a regular expression.
   # * MTX_SEGMENT_PATH: segment file path
-  runOnRecordSegmentComplete: curl -s http://localhost:8081/api/mediamtx/webhook?path=$MTX_PATH&rtsp_port=$RTSP_PORT&segment_path=$MTX_SEGMENT_PATH&event=segment_record_complete&token=MTX_TOKEN > /dev/null
+  runOnRecordSegmentComplete: curl -s http://localhost:8081/OTS_BASE/api/mediamtx/webhook?path=$MTX_PATH&rtsp_port=$RTSP_PORT&segment_path=$MTX_SEGMENT_PATH&event=segment_record_complete&token=MTX_TOKEN > /dev/null
 
 ###############################################
 # Path settings
@@ -616,7 +616,7 @@ pathDefaults:
 # for example "~^prefix" will match all paths that start with "prefix".
 paths:
   startup:
-    runOnInit: curl -s http://localhost:8081/api/mediamtx/webhook?path=$MTX_PATH&rtsp_port=$RTSP_PORT&event=init&token=MTX_TOKEN > /dev/null
+    runOnInit: curl -s http://localhost:8081/OTS_BASE/api/mediamtx/webhook?path=$MTX_PATH&rtsp_port=$RTSP_PORT&event=init&token=MTX_TOKEN > /dev/null
   # example:
   # my_camera:
   #   source: rtsp://my_camera

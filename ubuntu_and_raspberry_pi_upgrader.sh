@@ -54,6 +54,8 @@ fi
 
 # Set default values for environment variables
 OTS_GITHUB_USER="${OTS_GITHUB_USER:-brian7704}"
+OTS_HOME="${OTS_HOME:-$HOME/ots}"
+OTS_BASE="${OTS_BASE:-}"
 
 INSTALLER_DIR=/tmp/ots_installer
 mkdir -p $INSTALLER_DIR
@@ -114,7 +116,7 @@ if [[ "$BLEEDING_EDGE" -eq 1 ]]; then
   fi
   ~/.opentakserver_venv/bin/pip install "$GIT_URL"
 
-  if [ "$(grep postgresql ~/ots/config.yml)" -ne 0 ]; then
+  if [ "$(grep postgresql \"${OTS_HOME}\"/config.yml)" -ne 0 ]; then
     echo "${GREEN}Migrating from SQLite to PostgreSQL...${NC}"
     echo "${GREEN}Upgrading database schema...${NC}"
     sudo apt install postgresql-postgis pgloader
@@ -125,17 +127,19 @@ if [[ "$BLEEDING_EDGE" -eq 1 ]]; then
     if [ "$OTS_USER_EXISTS" != 1 ];
     then
       echo "${GREEN}Creating ots database and user in PostgreSQL${NC}"
-      POSTGRESQL_PASSWORD=$(tr -dc 'A-Za-z0-9!?%=' < /dev/urandom | head -c 20)
+      if [ -z "$POSTGRESQL_PASSWORD" ]; then
+        POSTGRESQL_PASSWORD=$(tr -dc 'A-Za-z0-9!?%=' < /dev/urandom | head -c 20)
+      fi
       sudo su postgres -c "psql -c 'create database ots;'"
       sudo su postgres -c "psql -c \"create role ots with login password '${POSTGRESQL_PASSWORD}';\""
       sudo su postgres -c "psql -c 'GRANT ALL PRIVILEGES  ON DATABASE \"ots\" TO ots;'"
       sudo su postgres -c "psql -d ots -c 'GRANT ALL ON SCHEMA public TO ots;'"
     else
-      POSTGRESQL_PASSWORD=$(cat ~/ots/config.yml | awk 'match($0, /\/\/.*:(.*)@/, a) {print a[1]}')
+      POSTGRESQL_PASSWORD=$(cat "${OTS_HOME}"/config.yml | awk 'match($0, /\/\/.*:(.*)@/, a) {print a[1]}')
     fi
 
-    sed -i "s/SQLALCHEMY_DATABASE_URI/\#SQLALCHEMY_DATABASE_URI/g" ~/ots/config.yml
-    echo "SQLALCHEMY_DATABASE_URI: postgresql+psycopg://ots:${POSTGRESQL_PASSWORD}@127.0.0.1/ots" >> ~/ots/config.yml
+    sed -i "s/SQLALCHEMY_DATABASE_URI/\#SQLALCHEMY_DATABASE_URI/g" "${OTS_HOME}"/config.yml
+    echo "SQLALCHEMY_DATABASE_URI: postgresql+psycopg://ots:${POSTGRESQL_PASSWORD}@127.0.0.1/ots" >> "${OTS_HOME}"/config.yml
 
     cd ~/.opentakserver_venv/lib/python3.1*/site-packages/opentakserver
     ~/.opentakserver_venv/bin/flask db upgrade
@@ -154,7 +158,7 @@ EOF
     sudo su postgres -c "pgloader ${INSTALLER_DIR}/db.load"
   else
     echo "${GREEN}Backing up DB...${NC}"
-    sudo su postgres -c "pg_dump ots" > ~/ots/ots_backup.db
+    sudo su postgres -c "pg_dump ots" > "${OTS_HOME}"/ots_backup.db
     echo "${GREEN}Upgrading DB...${NC}"
     cd ~/.opentakserver_venv/lib/python3.1*/site-packages/opentakserver
     ~/.opentakserver_venv/bin/flask db upgrade
@@ -173,7 +177,7 @@ elif [[ "$LATEST_MAJOR" -ne "$INSTALLED_MAJOR" || "$LATEST_MINOR" -ne "$INSTALLE
   echo "${GREEN}Upgrading OpenTAKServer to version ${LATEST_OTS_VERSION}${NC}"
   ~/.opentakserver_venv/bin/pip install opentakserver -U
 
-  if [ "$(grep postgresql ~/ots/config.yml)" -ne 0 ]; then
+  if [ "$(grep postgresql \"${OTS_HOME}\"/config.yml)" -ne 0 ]; then
       echo "${GREEN}Migrating from SQLite to PostgreSQL...${NC}"
       sudo apt install postgresql-postgis pgloader
 
@@ -183,17 +187,19 @@ elif [[ "$LATEST_MAJOR" -ne "$INSTALLED_MAJOR" || "$LATEST_MINOR" -ne "$INSTALLE
       if [ "$OTS_USER_EXISTS" != 1 ];
       then
         echo "${GREEN}Creating ots database and user in PostgreSQL${NC}"
-        POSTGRESQL_PASSWORD=$(tr -dc 'A-Za-z0-9!?%=' < /dev/urandom | head -c 20)
+        if [ -z "$POSTGRESQL_PASSWORD" ]; then
+          POSTGRESQL_PASSWORD=$(tr -dc 'A-Za-z0-9!?%=' < /dev/urandom | head -c 20)
+        fi
         sudo su postgres -c "psql -c 'create database ots;'"
         sudo su postgres -c "psql -c \"create role ots with login password '${POSTGRESQL_PASSWORD}';\""
         sudo su postgres -c "psql -c 'GRANT ALL PRIVILEGES  ON DATABASE \"ots\" TO ots;'"
         sudo su postgres -c "psql -d ots -c 'GRANT ALL ON SCHEMA public TO ots;'"
       else
-        POSTGRESQL_PASSWORD=$(cat ~/ots/config.yml | awk 'match($0, /\/\/.*:(.*)@/, a) {print a[1]}')
+        POSTGRESQL_PASSWORD=$(cat "${OTS_HOME}"/config.yml | awk 'match($0, /\/\/.*:(.*)@/, a) {print a[1]}')
       fi
 
-      sed -i "s/SQLALCHEMY_DATABASE_URI/\#SQLALCHEMY_DATABASE_URI/g" ~/ots/config.yml
-      echo "SQLALCHEMY_DATABASE_URI: postgresql+psycopg://ots:${POSTGRESQL_PASSWORD}@127.0.0.1/ots" >> ~/ots/config.yml
+      sed -i "s/SQLALCHEMY_DATABASE_URI/\#SQLALCHEMY_DATABASE_URI/g" "${OTS_HOME}"/config.yml
+      echo "SQLALCHEMY_DATABASE_URI: postgresql+psycopg://ots:${POSTGRESQL_PASSWORD}@127.0.0.1/ots" >> "${OTS_HOME}"/config.yml
 
       cd ~/.opentakserver_venv/lib/python3.1*/site-packages/opentakserver
       ~/.opentakserver_venv/bin/flask db upgrade
@@ -211,7 +217,7 @@ EOF
       sudo su postgres -c "pgloader ${INSTALLER_DIR}/db.load"
   else
     echo "${GREEN}Backing up DB...${NC}"
-    sudo su postgres -c "pg_dump ots" > ~/ots/ots_backup.db
+    sudo su postgres -c "pg_dump ots" > "${OTS_HOME}"/ots_backup.db
     echo "${GREEN}Upgrading DB...${NC}"
     cd ~/.opentakserver_venv/lib/python3.1*/site-packages/opentakserver
     ~/.opentakserver_venv/bin/flask db upgrade
@@ -317,14 +323,14 @@ EOF
 sudo systemctl daemon-reload
 
 # Upgrade MediaMTX
-MEDIAMTX_VERSION=$(~/ots/mediamtx/mediamtx --version)
+MEDIAMTX_VERSION=$("${OTS_HOME}"/mediamtx/mediamtx --version)
 MEDIAMTX_VERSION="${MEDIAMTX_VERSION//v}"
 #NEWEST_MEDIAMTX_VERSION=$(~/.opentakserver_venv/bin/lastversion bluenviron/mediamtx)
 NEWEST_MEDIAMTX_VERSION="1.13.0"
 
 if [ "$MEDIAMTX_VERSION" != "$NEWEST_MEDIAMTX_VERSION" ]; then
   echo "${GREEN}Upgrading MediaMTX from version ${MEDIAMTX_VERSION} to ${NEWEST_MEDIAMTX_VERSION}...${NC}"
-  cd ~/ots/mediamtx
+  cd "${OTS_HOME}"/mediamtx
   mv mediamtx.yml mediamtx.yml.bak
   mv mediamtx mediamtx_"$MEDIAMTX_VERSION"
   rm mediamtx*.tar.gz
@@ -347,9 +353,9 @@ if [ "$MEDIAMTX_VERSION" != "$NEWEST_MEDIAMTX_VERSION" ]; then
 fi
 
 # Make the server's public key if it doesn't exist
-if [ ! -f ~/ots/ca/certs/opentakserver/opentakserver.pub ]; then
+if [ ! -f "${OTS_HOME}"/ca/certs/opentakserver/opentakserver.pub ]; then
   echo "${GREEN}Generating server's public key...${NC}"
-  openssl x509 -pubkey -in ~/ots/ca/certs/opentakserver/opentakserver.pem -out ~/ots/ca/certs/opentakserver/opentakserver.pub
+  openssl x509 -pubkey -in "${OTS_HOME}"/ca/certs/opentakserver/opentakserver.pem -out "${OTS_HOME}"/ca/certs/opentakserver/opentakserver.pub
 fi
 
 # Check if MQTT is enabled in RabbitMQ
@@ -357,6 +363,7 @@ sudo ls /etc/rabbitmq/rabbitmq.conf &> /dev/null
 if [[ $? -ne 0 ]]; then
   echo "${GREEN}Enabling MQTT support in RabbitMQ${NC}"
   sudo wget https://raw.githubusercontent.com/${OTS_GITHUB_USER}/OpenTAKServer-Installer/master/rabbitmq.conf -O /etc/rabbitmq/rabbitmq.conf
+  sudo sed -i "s~OTS_BASE~${OTS_BASE}~g" /etc/rabbitmq/rabbitmq.conf
   # The following lines all end in "; \" because rabbitmq-plugins stops the script, even when it's successful
   # Adding "; \" is a janky fix to make the rest of the script work
   sudo rabbitmq-plugins enable rabbitmq_mqtt rabbitmq_auth_backend_http ; \
