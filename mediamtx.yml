@@ -621,6 +621,14 @@ paths:
   # my_camera:
   #   source: rtsp://my_camera
 
+  ~^youtube_(.+)$:
+    source: publisher
+    runOnDemand: >
+      sh -c 'ffmpeg -re -i "$(yt-dlp -g https://youtu.be/$(echo $RTSP_PATH | sed "s/youtube_//"))" -c:v copy -f rtsp rtsp://127.0.0.1:8554/$RTSP_PATH'
+    runOnDemandCloseAfter: 10s
+  # routes starting with a "youtube_" prefix will
+  # pull the stream from YouTube and publish it to the RTSP server.
+
   # Settings under path "all_others" are applied to all paths that
   # do not match another entry.
   all_others:
