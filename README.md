@@ -1,6 +1,6 @@
 # OpenTAKServer-Installer
 
-This repo contains installer scripts for OpenTAKServer. Ubuntu, Raspberry Pi OS, and Windows are currently supported.
+This repo contains installer scripts for OpenTAKServer. Ubuntu, Debian, Raspberry Pi OS, and Windows are currently supported.
 You can request support for different platforms by opening and issue on GitHub.
 
 ## Usage
@@ -8,6 +8,11 @@ You can request support for different platforms by opening and issue on GitHub.
 ### Ubuntu
 ```shell
 curl https://i.opentakserver.io/ubuntu_installer -L | bash - | tee ~/ots_ubuntu_installer.log
+```
+
+### Debian
+```shell
+curl https://i.opentakserver.io/debian_installer -L | bash - | tee ~/ots_debian_installer.log
 ```
 
 ### Raspberry Pi OS
