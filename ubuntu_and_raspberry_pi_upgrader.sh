@@ -170,13 +170,15 @@ EOF
     cd $INSTALLER_DIR
   fi
 
+  echo "${GREEN}Restarting the OpenTAKServer service. Please enter your sudo password if prompted${NC}"
+  sudo systemctl restart opentakserver
+fi
+
+if [[ "$BLEEDING_EDGE" -eq 0 ]]; then
   echo "${GREEN}Upgrading UI...${NC}"
   rm -fr /var/www/html/opentakserver/*
   cd /var/www/html/opentakserver/
   ~/.opentakserver_venv/bin/lastversion --assets extract brian7704/OpenTAKServer-UI
-
-  echo "${GREEN}Restarting the OpenTAKServer service. Please enter your sudo password if prompted${NC}"
-  sudo systemctl restart opentakserver
 fi
 
 if [ ! -f /etc/systemd/system/cot_parser.service ]; then
