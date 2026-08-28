@@ -109,6 +109,10 @@ if [[ "$BLEEDING_EDGE" -eq 1 ]]; then
   echo "${GREEN}Backing up DB...${NC}"
   sudo su postgres -c "pg_dump ots" > ~/ots/ots_backup.db
   echo "${GREEN}Upgrading DB...${NC}"
+
+  # Enable the postgis extension
+  sudo su postgres -c "psql -c 'CREATE EXTENSION postgis'"
+
   cd ~/.opentakserver_venv/lib/python3.1*/site-packages/opentakserver
   ~/.opentakserver_venv/bin/flask db upgrade
   cd $INSTALLER_DIR
@@ -128,6 +132,9 @@ elif [[ "$LATEST_MAJOR" -ne "$INSTALLED_MAJOR" || "$LATEST_MINOR" -ne "$INSTALLE
   if [ "$(grep postgresql ~/ots/config.yml)" -ne 0 ]; then
       echo "${GREEN}Migrating from SQLite to PostgreSQL...${NC}"
       sudo apt install postgresql-postgis pgloader
+
+      # Enable the postgis extension
+      sudo su postgres -c "psql -c 'CREATE EXTENSION postgis'"
 
       # Check of Postgres user ots exists
       OTS_USER_EXISTS=$(sudo su postgres -c "psql -tXAc \"SELECT 1 from pg_roles WHERE rolname='ots'\"")
