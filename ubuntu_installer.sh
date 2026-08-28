@@ -46,7 +46,7 @@ echo "${GREEN}OpenTAKServer Installed!${NC}"
 echo "${GREEN}Initializing Database...${NC}"
 
 # Enable the postgis extension
-sudo su postgres -c "psql -c 'CREATE EXTENSION postgis'"
+sudo su postgres -c "psql -d ots -c 'CREATE EXTENSION postgis'"
 
 # Check if the ots user and DB exist
 OTS_DB_EXISTS=$(sudo su postgres -c "psql -XtAc \"SELECT 1 FROM pg_database WHERE datname='ots'\"")

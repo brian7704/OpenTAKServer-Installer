@@ -111,7 +111,7 @@ if [[ "$BLEEDING_EDGE" -eq 1 ]]; then
   echo "${GREEN}Upgrading DB...${NC}"
 
   # Enable the postgis extension
-  sudo su postgres -c "psql -c 'CREATE EXTENSION postgis'"
+  sudo su postgres -c "psql -d ots -c 'CREATE EXTENSION postgis'"
 
   cd ~/.opentakserver_venv/lib/python3.1*/site-packages/opentakserver
   ~/.opentakserver_venv/bin/flask db upgrade
@@ -134,7 +134,7 @@ elif [[ "$LATEST_MAJOR" -ne "$INSTALLED_MAJOR" || "$LATEST_MINOR" -ne "$INSTALLE
       sudo apt install postgresql-postgis pgloader
 
       # Enable the postgis extension
-      sudo su postgres -c "psql -c 'CREATE EXTENSION postgis'"
+      sudo su postgres -c "psql -d ots -c 'CREATE EXTENSION postgis'"
 
       # Check of Postgres user ots exists
       OTS_USER_EXISTS=$(sudo su postgres -c "psql -tXAc \"SELECT 1 from pg_roles WHERE rolname='ots'\"")
