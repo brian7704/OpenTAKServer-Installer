@@ -78,6 +78,9 @@ echo "${GREEN}Configuring MediaMTX...${NC}"
 mkdir -p ~/ots/mediamtx/recordings
 ln -s /opt/homebrew/etc/mediamtx/mediamtx.yml ~/ots/mediamtx/mediamtx.yml
 
+# Youtube Streaming support
+pip3.12 install yt-dlp
+
 cd ~/ots/mediamtx
 curl -sL https://github.com/brian7704/OpenTAKServer-Installer/raw/master/mediamtx.yml -o /opt/homebrew/etc/mediamtx/mediamtx.yml
 sed -i '' "s~SERVER_CERT_FILE~${HOME}/ots/ca/certs/opentakserver/opentakserver.pem~g" /opt/homebrew/etc/mediamtx/mediamtx.yml
