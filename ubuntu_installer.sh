@@ -45,9 +45,6 @@ echo "${GREEN}OpenTAKServer Installed!${NC}"
 
 echo "${GREEN}Initializing Database...${NC}"
 
-# Enable the postgis extension
-sudo su postgres -c "psql -d ots -c 'CREATE EXTENSION postgis'"
-
 # Check if the ots user and DB exist
 OTS_DB_EXISTS=$(sudo su postgres -c "psql -XtAc \"SELECT 1 FROM pg_database WHERE datname='ots'\"")
 OTS_USER_EXISTS=$(sudo su postgres -c "psql -tXAc \"SELECT 1 from pg_roles WHERE rolname='ots'\"")
@@ -71,6 +68,9 @@ fi
 
 sudo su postgres -c "psql -c 'GRANT ALL PRIVILEGES  ON DATABASE \"ots\" TO ots;'"
 sudo su postgres -c "psql -d ots -c 'GRANT ALL ON SCHEMA public TO ots;'"
+
+# Enable the postgis extension
+sudo su postgres -c "psql -d ots -c 'CREATE EXTENSION postgis'"
 
 cd "$HOME"/.opentakserver_venv/lib/python3.*/site-packages/opentakserver
 flask db upgrade
