@@ -28,8 +28,8 @@ mkdir -p ~/ots
 
 echo "${GREEN}Installing packages via apt. You may be prompted for your sudo password...${NC}"
 
-sudo apt update && sudo NEEDRESTART_MODE=a apt upgrade -y
-sudo NEEDRESTART_MODE=a apt install curl python3 python3-pip python3-venv rabbitmq-server openssl nginx ffmpeg libnginx-mod-stream python3-dev postgresql postgresql-contrib postgis -y
+sudo apt update && sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt upgrade -y
+sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt install curl python3 python3-pip python3-venv rabbitmq-server openssl nginx ffmpeg libnginx-mod-stream python3-dev postgresql postgresql-contrib postgis -y
 #sudo cp $INSTALLER_DIR /etc/iptables/
 #sudo iptables-restore < /etc/iptables/rules.v4
 
@@ -99,7 +99,7 @@ then
   curl -s 'https://raw.githubusercontent.com/zerotier/ZeroTierOne/master/doc/contact%40zerotier.com.gpg' | gpg --import && \
   curl -s 'https://install.zerotier.com/' -o /tmp/zerotier_installer.sh
   if gpg --verify /tmp/zerotier_installer.sh; then
-    sudo NEEDRESTART_MODE=a bash /tmp/zerotier_installer.sh
+    sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a bash /tmp/zerotier_installer.sh
   fi
 
   while :
@@ -136,7 +136,7 @@ if [ "$INSTALL_MUMBLE" == 1 ]; then
   sudo echo "deb http://zeroc.com/download/Ice/3.7/ubuntu`lsb_release -rs` stable main" | sudo tee /etc/apt/sources.list.d/zeroc.list
   sudo apt update
 
-  sudo NEEDRESTART_MODE=a apt install mumble-server zeroc-ice-all-runtime zeroc-ice-all-dev -y
+  sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt install mumble-server zeroc-ice-all-runtime zeroc-ice-all-dev -y
 
   sudo sed -i '/ice="tcp -h 127.0.0.1 -p 6502"/s/^#//g' /etc/mumble-server.ini
   sudo sed -i 's/icesecretwrite/;icesecretwrite/g' /etc/mumble-server.ini

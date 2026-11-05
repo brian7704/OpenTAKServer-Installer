@@ -28,8 +28,8 @@ mkdir -p ~/ots
 
 echo "${GREEN}Installing packages via apt. You may be prompted for your sudo password...${NC}"
 
-sudo apt update && sudo NEEDRESTART_MODE=a apt upgrade -y
-sudo NEEDRESTART_MODE=a apt install curl python3 python3-pip python3-venv rabbitmq-server openssl nginx ffmpeg libnginx-mod-stream python3-dev postgresql-postgis pgloader -y
+sudo apt update && sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt upgrade -y
+sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt install curl python3 python3-pip python3-venv rabbitmq-server openssl nginx ffmpeg libnginx-mod-stream python3-dev postgresql-postgis pgloader -y
 
 echo "${GREEN} Installing OpenTAKServer from PyPI...${NC}"
 python3 -m venv --system-site-packages ~/.opentakserver_venv
@@ -98,7 +98,7 @@ then
   curl -s 'https://raw.githubusercontent.com/zerotier/ZeroTierOne/master/doc/contact%40zerotier.com.gpg' | gpg --import && \
   curl -s 'https://install.zerotier.com/' -o /tmp/zerotier_installer.sh
   if gpg --verify /tmp/zerotier_installer.sh; then
-    sudo NEEDRESTART_MODE=a bash /tmp/zerotier_installer.sh
+    sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a bash /tmp/zerotier_installer.sh
   fi
 
   while :
@@ -131,7 +131,7 @@ do
 done
 
 if [ "$INSTALL_MUMBLE" == 1 ]; then
-  sudo NEEDRESTART_MODE=a apt install mumble-server zeroc-ice-all-runtime zeroc-ice-all-dev -y
+  sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt install mumble-server zeroc-ice-all-runtime zeroc-ice-all-dev -y
 
   sudo sed -i '/ice="tcp -h 127.0.0.1 -p 6502"/s/^;//g' /etc/mumble/mumble-server.ini
   sudo sed -i 's/icesecretwrite/;icesecretwrite/g' /etc/mumble/mumble-server.ini
