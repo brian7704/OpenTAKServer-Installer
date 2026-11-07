@@ -131,7 +131,8 @@ do
 done
 
 if [ "$INSTALL_MUMBLE" == 1 ]; then
-  sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt install mumble-server zeroc-ice-all-runtime zeroc-ice-all-dev -y
+  # php-zeroc-ice pulls in libapache2-mod-php, which recommends apache2 and conflicts with nginx on port 80
+  sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt install mumble-server zeroc-ice-all-runtime zeroc-ice-all-dev apache2- -y
 
   sudo sed -i '/ice="tcp -h 127.0.0.1 -p 6502"/s/^;//g' /etc/mumble/mumble-server.ini
   sudo sed -i 's/icesecretwrite/;icesecretwrite/g' /etc/mumble/mumble-server.ini
