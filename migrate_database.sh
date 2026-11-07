@@ -26,7 +26,7 @@ OTS_USER_EXISTS=$(sudo su postgres -c "psql -tXAc \"SELECT 1 from pg_roles WHERE
 if [ "$OTS_USER_EXISTS" != 1 ];
 then
   echo "${GREEN}Creating ots database and user in PostgreSQL${NC}"
-  POSTGRESQL_PASSWORD=$(tr -dc 'A-Za-z0-9!?%=' < /dev/urandom | head -c 20)
+  POSTGRESQL_PASSWORD=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 20)
   sudo su postgres -c "psql -c \"create role ots with login password '${POSTGRESQL_PASSWORD}';\""
   sudo su postgres -c "psql -c 'create database ots;'"
   sudo su postgres -c "psql -c 'GRANT ALL PRIVILEGES  ON DATABASE \"ots\" TO ots;'"

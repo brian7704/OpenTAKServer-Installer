@@ -66,7 +66,7 @@ OTS_USER_EXISTS=$(sudo su postgres -c "psql -tXAc \"SELECT 1 from pg_roles WHERE
 if [ "$OTS_USER_EXISTS" != 1 ];
 then
   echo "${GREEN}Creating ots user in PostgreSQL${NC}"
-  POSTGRESQL_PASSWORD=$(tr -dc 'A-Za-z0-9!?%=' < /dev/urandom | head -c 20)
+  POSTGRESQL_PASSWORD=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 20)
   sudo su postgres -c "psql -c \"create role ots with login password '${POSTGRESQL_PASSWORD}';\""
   sed -i "s/POSTGRESQL_PASSWORD/${POSTGRESQL_PASSWORD}/g" ~/ots/config.yml
 else
