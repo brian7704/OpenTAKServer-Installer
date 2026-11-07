@@ -178,6 +178,8 @@ Wants=network.target
 [Service]
 User=$(whoami)
 ExecStart=$HOME/ots/mediamtx/mediamtx $HOME/ots/mediamtx/mediamtx.yml
+Restart=always
+RestartSec=5s
 [Install]
 WantedBy=multi-user.target
 EOF
