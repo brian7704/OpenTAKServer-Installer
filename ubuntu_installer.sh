@@ -29,7 +29,7 @@ mkdir -p ~/ots
 echo "${GREEN}Installing packages via apt. You may be prompted for your sudo password...${NC}"
 
 sudo apt update && sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt upgrade -y
-sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt install curl python3 python3-pip python3-venv rabbitmq-server openssl nginx ffmpeg libnginx-mod-stream python3-dev postgresql-postgis pgloader -y
+sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt install curl python3 python3-pip python3-venv rabbitmq-server openssl nginx ffmpeg libnginx-mod-stream python3-dev postgresql-postgis pgloader build-essential -y
 
 echo "${GREEN} Installing OpenTAKServer from PyPI...${NC}"
 python3 -m venv --system-site-packages ~/.opentakserver_venv
