@@ -315,13 +315,16 @@ sudo systemctl start eud_handler_ssl
 echo "${GREEN}Configuring RabbitMQ...${NC}"
 sudo wget https://raw.githubusercontent.com/brian7704/OpenTAKServer-Installer/master/rabbitmq.conf -qO /etc/rabbitmq/rabbitmq.conf
 
-# On Ubuntu 25.04 and up the PLUGINS_DIR variable needs to be set in order to enable plugins
-IFS=" "
-RABBITMQ_VERSION="$(sudo rabbitmqadmin --version)"
-read -ra VERSION_ARRAY <<< "$RABBITMQ_VERSION"
-VERSION=${VERSION_ARRAY[1]}
-sudo echo "PLUGINS_DIR=\"/usr/lib/rabbitmq/plugins:/usr/lib/rabbitmq/lib/rabbitmq_server-${VERSION}/plugins\"" | sudo tee -a /etc/rabbitmq/rabbitmq-env.conf
-sudo systemctl restart rabbitmq-server
+# On Ubuntu 25.04 the PLUGINS_DIR variable needs to be set in order to enable plugins
+if [ "$VERSION_ID" == "25.04"]
+then
+  IFS=" "
+  RABBITMQ_VERSION="$(sudo rabbitmqadmin --version)"
+  read -ra VERSION_ARRAY <<< "$RABBITMQ_VERSION"
+  VERSION=${VERSION_ARRAY[1]}
+  sudo echo "PLUGINS_DIR=\"/usr/lib/rabbitmq/plugins:/usr/lib/rabbitmq/lib/rabbitmq_server-${VERSION}/plugins\"" | sudo tee -a /etc/rabbitmq/rabbitmq-env.conf
+  sudo systemctl restart rabbitmq-server
+fi
 
 # The following lines all end in "; \" because rabbitmq-plugins stops the script, even when it's successful
 # Adding "; \" is a janky fix to make the rest of the script work
